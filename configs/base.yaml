@@ -1,0 +1,3 @@
+application:
+  name: sthin
+  port: 8080

@@ -3,9 +3,17 @@ name = "sthin"
 version = "0.1.0"
 edition = "2024"
 
+[lib]
+path = "src/lib.rs"
+
+[[bin]]
+name = "sthin-runner"
+path = "src/main.rs"
+
 [dependencies]
 actix-web = "4"
 config = "0.15"
+serde = {version = "1", features = ["derive"]}
 tokio = {version = "1", features = [
     "macros",
     "rt-multi-thread",
