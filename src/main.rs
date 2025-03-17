@@ -1,6 +1,11 @@
-use sthin::configuration::*;
+use sthin::{configuration::*, startup::Application};
 
-fn main() {
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
     let config = Configs::get().expect("Failed to read configuration");
-    println!("Config: {:?}", config);
+
+    let server = Application::build(config).await?;
+    server.run_until_stopped().await?;
+
+    Ok(())
 }
