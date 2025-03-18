@@ -1,11 +1,11 @@
 use crate::domain::DomainError;
-use url::Url;
+use url::Url as ParseUrl;
 
 pub struct ValidUrl(String);
 
 impl ValidUrl {
     pub fn new(url: String) -> Result<Self, DomainError> {
-        match Url::parse(&url) {
+        match ParseUrl::parse(&url) {
             Ok(parsed) if parsed.scheme() == "http" || parsed.scheme() == "https" => {
                 if url.len() > 2048 {
                     return Err(DomainError::UrlTooLong(2048));
