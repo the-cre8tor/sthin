@@ -5,7 +5,7 @@ use rand::Rng;
 pub struct ShortCode(String);
 
 impl ShortCode {
-    fn new() -> Result<Self, DomainError> {
+    pub fn new() -> Result<Self, DomainError> {
         let mut rng = rand::rng();
         let random_bytes: [u8; 6] = rng.random();
 
