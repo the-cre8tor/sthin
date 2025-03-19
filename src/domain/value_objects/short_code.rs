@@ -1,4 +1,4 @@
-use crate::domain::DomainError;
+use crate::domain::errors::DomainError;
 use base64::{Engine as _, engine::general_purpose};
 use rand::Rng;
 

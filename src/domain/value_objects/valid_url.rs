@@ -1,4 +1,4 @@
-use crate::domain::DomainError;
+use crate::domain::errors::DomainError;
 use url::Url as ParseUrl;
 
 pub struct ValidUrl(String);

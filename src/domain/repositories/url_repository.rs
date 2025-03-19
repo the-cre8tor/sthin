@@ -1,7 +1,9 @@
 use async_trait::async_trait;
 use uuid::Uuid;
 
-use crate::domain::{DomainError, ShortCode, Url, ValidUrl};
+use crate::domain::errors::DomainError;
+use crate::domain::models::Url;
+use crate::domain::value_objects::{ShortCode, ValidUrl};
 
 #[async_trait]
 pub trait UrlRepository: Send + Sync {

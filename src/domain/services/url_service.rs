@@ -1,4 +1,14 @@
-use crate::domain::{DomainError, ShortCode, Url, UrlRepository, ValidUrl};
+use async_trait::async_trait;
+
+use crate::domain::errors::DomainError;
+use crate::domain::models::Url;
+use crate::domain::repositories::UrlRepository;
+use crate::domain::value_objects::{ShortCode, ValidUrl};
+
+#[async_trait]
+pub trait IUrlService: Send + Sync {
+    async fn create_short_url(&self, original_url: ValidUrl) -> Result<Url, DomainError>;
+}
 
 pub struct UrlService<R: UrlRepository> {
     url_repo: R,
@@ -10,8 +20,11 @@ impl<R: UrlRepository> UrlService<R> {
             url_repo: url_repository,
         }
     }
+}
 
-    pub async fn create_short_url(&self, original_url: ValidUrl) -> Result<Url, DomainError> {
+#[async_trait]
+impl<R: UrlRepository> IUrlService for UrlService<R> {
+    async fn create_short_url(&self, original_url: ValidUrl) -> Result<Url, DomainError> {
         if let Some(existing) = self.url_repo.find_by_original_url(&original_url).await? {
             return Ok(existing);
         }
