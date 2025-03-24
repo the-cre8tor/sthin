@@ -7,7 +7,11 @@ use crate::domain::value_objects::{ShortCode, ValidUrl};
 
 #[async_trait]
 pub trait IUrlService: Send + Sync {
-    async fn create_short_url(&self, original_url: ValidUrl) -> Result<Url, DomainError>;
+    async fn create_short_url(
+        &self,
+        original_url: ValidUrl,
+        short_code: Option<ShortCode>,
+    ) -> Result<Url, DomainError>;
 }
 
 pub struct UrlService<R: UrlRepository> {
@@ -24,12 +28,19 @@ impl<R: UrlRepository> UrlService<R> {
 
 #[async_trait]
 impl<R: UrlRepository> IUrlService for UrlService<R> {
-    async fn create_short_url(&self, original_url: ValidUrl) -> Result<Url, DomainError> {
+    async fn create_short_url(
+        &self,
+        original_url: ValidUrl,
+        short_code: Option<ShortCode>,
+    ) -> Result<Url, DomainError> {
         if let Some(existing) = self.url_repo.find_by_original_url(&original_url).await? {
             return Ok(existing);
         }
 
-        let mut short_code = ShortCode::new()?;
+        let mut short_code = match short_code {
+            Some(value) => value,
+            None => ShortCode::new(None)?,
+        };
 
         let mut attempts = 0;
 
@@ -38,7 +49,7 @@ impl<R: UrlRepository> IUrlService for UrlService<R> {
                 return Err(DomainError::ShortcodeConflict);
             }
 
-            short_code = ShortCode::new()?;
+            short_code = ShortCode::new(None)?;
             attempts += 1;
         }
 
