@@ -2,6 +2,7 @@ use crate::configuration::Env;
 use config::ConfigError;
 use redact::Secret;
 use serde_aux::field_attributes::deserialize_number_from_string;
+use sqlx::postgres::{PgConnectOptions, PgSslMode};
 
 #[derive(serde::Deserialize)]
 pub struct Settings {
@@ -49,5 +50,39 @@ impl Configs {
             .build()?;
 
         settings.try_deserialize::<Settings>()
+    }
+}
+
+impl DatabaseSettings {
+    pub fn connect_options(&self) -> PgConnectOptions {
+        let ssl_mode = if self.require_ssl {
+            PgSslMode::Require
+        } else {
+            PgSslMode::Prefer
+        };
+
+        PgConnectOptions::new()
+            .host(&self.host)
+            .username(&self.username)
+            .password(self.password.expose_secret())
+            .port(self.port)
+            .ssl_mode(ssl_mode)
+            .database(&self.database_name)
+    }
+
+    pub fn connection_string(&self) -> String {
+        format!(
+            "postgres://{}:{}@{}:{}/{}?sslmode={}",
+            self.username,
+            self.password.expose_secret(),
+            self.host,
+            self.port,
+            self.database_name,
+            if self.require_ssl {
+                "require"
+            } else {
+                "prefer"
+            }
+        )
     }
 }

@@ -6,15 +6,14 @@ pub struct ShortCode(String);
 
 impl ShortCode {
     pub fn new(custom_code: Option<String>) -> Result<Self, DomainError> {
-        let mut rng = rand::rng();
-        let random_bytes: [u8; 6] = rng.random();
-
-        // Use URL-safe Base64 encoding and take only first 8 chars
-        let gen_bytes = general_purpose::URL_SAFE_NO_PAD.encode(&random_bytes);
-
         let short_code = if let Some(custom_value) = custom_code {
             Self(custom_value)
         } else {
+            let mut rng = rand::rng();
+            let random_bytes: [u8; 6] = rng.random();
+
+            // Use URL-safe Base64 encoding and take only first 8 chars
+            let gen_bytes = general_purpose::URL_SAFE_NO_PAD.encode(&random_bytes);
             Self(gen_bytes[0..8].to_string())
         };
 
