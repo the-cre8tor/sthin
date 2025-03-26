@@ -1,23 +1,38 @@
 use crate::configuration::Env;
 use config::ConfigError;
+use redact::Secret;
+use serde_aux::field_attributes::deserialize_number_from_string;
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize)]
 pub struct Settings {
     pub application: ApplicationSettings,
+    pub database: DatabaseSettings,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize)]
 pub struct ApplicationSettings {
     pub name: String,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
     pub port: u16,
     pub host: String,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct DatabaseSettings {
+    pub username: String,
+    pub password: Secret<String>,
+    #[serde(deserialize_with = "deserialize_number_from_string")]
+    pub port: u16,
+    pub host: String,
+    pub database_name: String,
+    pub require_ssl: bool,
 }
 
 pub struct Configs;
 
 impl Configs {
     pub fn get() -> Result<Settings, ConfigError> {
-        let base_path = std::env::current_dir().expect("Failed to determin the current directory");
+        let base_path = std::env::current_dir().expect("Failed to determine the current directory");
         let config_dir = base_path.join("configs");
 
         let env: Env = std::env::var("APP_ENV")
