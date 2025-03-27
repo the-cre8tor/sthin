@@ -46,7 +46,7 @@ impl Configs {
         let settings = config::Config::builder()
             .add_source(config::File::from(config_dir.join("base.yaml")))
             .add_source(config::File::from(config_dir.join(env_filename)))
-            .add_source(config::Environment::with_prefix("APP").separator("__"))
+            .add_source(config::Environment::default().separator("__"))
             .build()?;
 
         settings.try_deserialize::<Settings>()

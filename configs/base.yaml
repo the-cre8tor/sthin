@@ -1,3 +1,9 @@
 application:
   name: sthin
   port: 8080
+database:
+  host: "127.0.0.1"
+  port: 5430
+  username: "app"
+  password: "secret"
+  database_name: "sthin"
