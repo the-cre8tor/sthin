@@ -7,7 +7,7 @@ use crate::{
     },
 };
 
-pub struct CreateUrlCommand<U: IUrlService + Send + Sync> {
+pub struct CreateUrlCommand<U: IUrlService> {
     url_service: U,
 }
 

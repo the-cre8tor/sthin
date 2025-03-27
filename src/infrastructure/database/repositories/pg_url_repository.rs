@@ -22,11 +22,23 @@ impl UrlRepository for PgUrlRepository {
         let saved_url = sqlx::query_as!(
             DbUrl,
             r#"
-
+            INSERT INTO urls (original_url, short_code, created_at, updated_at)
+            VALUES ($1, $2, $3, $4)
+            ON CONFLICT (short_code) DO UPDATE
+            SET original_url = EXCLUDED.original_url,
+                updated_at = EXCLUDED.updated_at
+            RETURNING *
             "#,
-        );
+            db_url.original_url,
+            db_url.short_code,
+            db_url.created_at,
+            db_url.updated_at
+        )
+        .fetch_one(&self.pool)
+        .await
+        .map_err(DomainError::UnexpectedError)?;
 
-        Ok()
+        saved_url.to_domain()
     }
 
     async fn find_by_id(&self, id: uuid::Uuid) -> Result<Option<uuid::Uuid>, DomainError> {
