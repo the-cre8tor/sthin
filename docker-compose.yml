@@ -1,0 +1,62 @@
+version: "3.8"
+
+services:
+  # backend:
+  #   container_name: sthin-app
+  #   image: sthin-api
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   ports:
+  #     - 8000:8000
+  #     # - '8080-8085:8080'
+  #   environment:
+  #     - DATABASE__HOST=postgres-db
+  #     - DATABASE__PORT=5432
+  #     - DATABASE__USERNAME=app
+  #     - DATABASE__PASSWORD=secret
+  #     - DATABASE__DATABASE_NAME=sthin
+  #     - DATABASE__REQUIRE_SSL=false
+  #     - APPLICATION__BASE_URL=0.0.0.0:8000
+  #     - REDIS_URI=redis://redis-db
+  #   volumes:
+  #     - ./src:/usr/src/app/src
+  #   restart: unless-stopped
+  #   networks:
+  #     - backend_network
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  # deploy:
+  #   replicas: 4
+
+  postgres:
+    container_name: sthin-db
+    image: postgres:latest
+    ports:
+      - 5430:5432
+    environment:
+      - POSTGRES_PASSWORD=password
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=newsletter
+    networks:
+      - backend_network
+    restart: unless-stopped
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-scripts:/docker-entrypoint-initdb.d
+
+  redis:
+    container_name: sthin-redis
+    image: "redis:latest"
+    ports:
+      - "6370:6379"
+    networks:
+      - backend_network
+
+networks:
+  backend_network:
+    driver: bridge
+
+volumes:
+  postgres_data: {}

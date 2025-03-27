@@ -1,12 +1,9 @@
-use async_trait::async_trait;
-
 use crate::domain::errors::DomainError;
 use crate::domain::models::Url;
 use crate::domain::repositories::UrlRepository;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-#[async_trait]
-pub trait IUrlService: Send + Sync {
+pub trait IUrlService {
     async fn create_short_url(
         &self,
         original_url: ValidUrl,
@@ -26,7 +23,6 @@ impl<R: UrlRepository> UrlService<R> {
     }
 }
 
-#[async_trait]
 impl<R: UrlRepository> IUrlService for UrlService<R> {
     async fn create_short_url(
         &self,

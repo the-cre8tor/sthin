@@ -1,12 +1,10 @@
-use async_trait::async_trait;
 use uuid::Uuid;
 
 use crate::domain::errors::DomainError;
 use crate::domain::models::Url;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-#[async_trait]
-pub trait UrlRepository: Send + Sync {
+pub trait UrlRepository {
     async fn save(&self, url: &Url) -> Result<Url, DomainError>;
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Uuid>, DomainError>;
     async fn find_by_short_code(&self, short_code: &ShortCode) -> Result<Option<Url>, DomainError>; // update the short code type
