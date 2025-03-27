@@ -4,15 +4,27 @@ use crate::domain::errors::DomainError;
 use crate::domain::models::Url;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-pub trait UrlRepository {
-    async fn save(&self, url: &Url) -> Result<Url, DomainError>;
-    async fn find_by_id(&self, id: Uuid) -> Result<Option<Uuid>, DomainError>;
-    async fn find_by_short_code(&self, short_code: &ShortCode) -> Result<Option<Url>, DomainError>; // update the short code type
-    async fn find_by_original_url(
+pub trait UrlRepository: Send + Sync {
+    fn save(&self, url: &Url) -> impl Future<Output = Result<Url, DomainError>> + Send;
+    fn find_by_id(
+        &self,
+        id: Uuid,
+    ) -> impl Future<Output = Result<Option<Uuid>, DomainError>> + Send;
+    fn find_by_short_code(
+        &self,
+        short_code: &ShortCode,
+    ) -> impl Future<Output = Result<Option<Url>, DomainError>> + Send; // update the short code type
+    fn find_by_original_url(
         &self,
         original_url: &ValidUrl,
-    ) -> Result<Option<Url>, DomainError>;
-    async fn update(&self, url: &Url) -> Result<Url, DomainError>;
-    async fn delete_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError>;
-    async fn exists_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError>;
+    ) -> impl Future<Output = Result<Option<Url>, DomainError>> + Send;
+    fn update(&self, url: &Url) -> impl Future<Output = Result<Url, DomainError>> + Send;
+    fn delete_by_short_code(
+        &self,
+        short_code: &ShortCode,
+    ) -> impl Future<Output = Result<bool, DomainError>> + Send;
+    fn exists_by_short_code(
+        &self,
+        short_code: &ShortCode,
+    ) -> impl Future<Output = Result<bool, DomainError>> + Send;
 }

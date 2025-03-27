@@ -3,12 +3,12 @@ use crate::domain::models::Url;
 use crate::domain::repositories::UrlRepository;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-pub trait IUrlService {
-    async fn create_short_url(
+pub trait IUrlService: Send + Sync {
+    fn create_short_url(
         &self,
         original_url: ValidUrl,
         short_code: Option<ShortCode>,
-    ) -> Result<Url, DomainError>;
+    ) -> impl Future<Output = Result<Url, DomainError>> + Send;
 }
 
 pub struct UrlService<R: UrlRepository> {
