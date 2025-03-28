@@ -85,10 +85,6 @@ impl UrlRepository for PgUrlRepository {
         result.map(|db_url| db_url.to_domain()).transpose()
     }
 
-    // async fn update(&self, url: &Url) -> Result<Url, DomainError> {
-    //     todo!()
-    // }
-
     async fn delete_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError> {
         let result = sqlx::query!(
             "DELETE FROM urls WHERE short_code = $1",
@@ -102,6 +98,12 @@ impl UrlRepository for PgUrlRepository {
     }
 
     async fn exists_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError> {
-        todo!()
+        let result = self.find_by_short_code(short_code).await?;
+
+        Ok(result.is_none())
     }
+
+    // async fn update(&self, url: &Url) -> Result<Url, DomainError> {
+    //     todo!()
+    // }
 }
