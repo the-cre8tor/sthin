@@ -1,7 +1,9 @@
 use sqlx::PgPool;
 
 use crate::{
-    domain::{errors::DomainError, models::Url, repositories::UrlRepository},
+    domain::{
+        errors::DomainError, models::Url, repositories::UrlRepository, value_objects::ShortCode,
+    },
     infrastructure::database::models::db_url::DbUrl,
 };
 
@@ -45,11 +47,17 @@ impl UrlRepository for PgUrlRepository {
         todo!()
     }
 
-    async fn find_by_short_code(
-        &self,
-        short_code: &crate::domain::value_objects::ShortCode,
-    ) -> Result<Option<Url>, DomainError> {
-        todo!()
+    async fn find_by_short_code(&self, short_code: &ShortCode) -> Result<Option<Url>, DomainError> {
+        let result = sqlx::query_as!(
+            DbUrl,
+            "SELECT * FROM urls WHERE short_code = $1",
+            short_code.as_ref()
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(DomainError::UnexpectedError)?;
+
+        result.map(|db_url| db_url.to_domain()).transpose()
     }
 
     async fn find_by_original_url(
