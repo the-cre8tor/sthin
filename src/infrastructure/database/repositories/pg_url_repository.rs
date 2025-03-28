@@ -1,8 +1,12 @@
 use sqlx::PgPool;
+use uuid::Uuid;
 
 use crate::{
     domain::{
-        errors::DomainError, models::Url, repositories::UrlRepository, value_objects::ShortCode,
+        errors::DomainError,
+        models::Url,
+        repositories::UrlRepository,
+        value_objects::{ShortCode, ValidUrl},
     },
     infrastructure::database::models::db_url::DbUrl,
 };
@@ -43,8 +47,13 @@ impl UrlRepository for PgUrlRepository {
         saved_url.to_domain()
     }
 
-    async fn find_by_id(&self, id: uuid::Uuid) -> Result<Option<uuid::Uuid>, DomainError> {
-        todo!()
+    async fn find_by_id(&self, id: Uuid) -> Result<Option<Uuid>, DomainError> {
+        let result = sqlx::query!("SELECT id FROM urls WHERE id = $1", id)
+            .fetch_optional(&self.pool)
+            .await
+            .map_err(DomainError::UnexpectedError)?;
+
+        Ok(result.map(|row| row.id))
     }
 
     async fn find_by_short_code(&self, short_code: &ShortCode) -> Result<Option<Url>, DomainError> {
@@ -62,26 +71,28 @@ impl UrlRepository for PgUrlRepository {
 
     async fn find_by_original_url(
         &self,
-        original_url: &crate::domain::value_objects::ValidUrl,
+        original_url: &ValidUrl,
     ) -> Result<Option<Url>, DomainError> {
         todo!()
     }
 
-    async fn update(&self, url: &Url) -> Result<Url, DomainError> {
-        todo!()
+    // async fn update(&self, url: &Url) -> Result<Url, DomainError> {
+    //     todo!()
+    // }
+
+    async fn delete_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError> {
+        let result = sqlx::query!(
+            "DELETE FROM urls WHERE short_code = $1",
+            short_code.as_str()
+        )
+        .execute(&self.pool)
+        .await
+        .map_err(DomainError::UnexpectedError)?;
+
+        Ok(result.rows_affected() > 0)
     }
 
-    async fn delete_by_short_code(
-        &self,
-        short_code: &crate::domain::value_objects::ShortCode,
-    ) -> Result<bool, DomainError> {
-        todo!()
-    }
-
-    async fn exists_by_short_code(
-        &self,
-        short_code: &crate::domain::value_objects::ShortCode,
-    ) -> Result<bool, DomainError> {
+    async fn exists_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError> {
         todo!()
     }
 }
