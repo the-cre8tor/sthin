@@ -73,7 +73,16 @@ impl UrlRepository for PgUrlRepository {
         &self,
         original_url: &ValidUrl,
     ) -> Result<Option<Url>, DomainError> {
-        todo!()
+        let result = sqlx::query_as!(
+            DbUrl,
+            "SELECT * FROM urls WHERE original_url = $1",
+            original_url.as_ref()
+        )
+        .fetch_optional(&self.pool)
+        .await
+        .map_err(DomainError::UnexpectedError)?;
+
+        result.map(|db_url| db_url.to_domain()).transpose()
     }
 
     // async fn update(&self, url: &Url) -> Result<Url, DomainError> {
