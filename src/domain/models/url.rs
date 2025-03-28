@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-#[derive(serde::Serialize)]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Url {
     pub id: Option<Uuid>,
     pub original_url: ValidUrl,

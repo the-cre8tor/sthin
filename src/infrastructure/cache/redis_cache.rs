@@ -48,6 +48,11 @@ impl RedisCache {
 
         self.set(&key, url, duration).await
     }
+
+    pub async fn get_cached_url(&self, short_code: &str) -> Result<Option<Url>, CacheError> {
+        let key = format!("url:{}", short_code);
+        self.get(&key).await
+    }
 }
 
 #[derive(thiserror::Error, Debug)]
