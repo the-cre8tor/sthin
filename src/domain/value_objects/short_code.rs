@@ -2,6 +2,7 @@ use crate::domain::errors::DomainError;
 use base64::{Engine as _, engine::general_purpose};
 use rand::Rng;
 
+#[derive(serde::Serialize)]
 pub struct ShortCode(String);
 
 impl ShortCode {

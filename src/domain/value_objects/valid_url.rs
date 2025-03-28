@@ -1,6 +1,7 @@
 use crate::domain::errors::DomainError;
 use url::Url as ParseUrl;
 
+#[derive(serde::Serialize)]
 pub struct ValidUrl(String);
 
 impl ValidUrl {

@@ -3,6 +3,8 @@ use std::time::Duration;
 use redis::{AsyncCommands, Client};
 use serde::{Serialize, de::DeserializeOwned};
 
+use crate::domain::models::Url;
+
 pub struct RedisCache {
     client: Client,
 }
@@ -34,12 +36,17 @@ impl RedisCache {
         let mut connection = self.client.get_multiplexed_async_connection().await?;
         let result: Option<String> = connection.get(key).await?;
 
-        let deserialized = result.map(|value| {
-            let value = value.to_string();
-            serde_json::from_str(&value).map_err(CacheError::JsonSerializationError)
-        });
+        let deserialized = result
+            .map(|value| serde_json::from_str(&value).map_err(CacheError::JsonSerializationError));
 
         deserialized.transpose()
+    }
+
+    pub async fn cache_url(&self, short_code: &str, url: &Url) -> Result<(), CacheError> {
+        let key = format!("url:{}", short_code);
+        let duration = Some(Duration::from_secs(3600)); // an hour
+
+        self.set(&key, url, duration).await
     }
 }
 
