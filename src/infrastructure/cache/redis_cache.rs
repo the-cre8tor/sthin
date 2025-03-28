@@ -1,9 +1,8 @@
-use std::time::Duration;
-
+use super::error::CacheError;
+use crate::domain::models::Url;
 use redis::{AsyncCommands, Client};
 use serde::{Serialize, de::DeserializeOwned};
-
-use crate::domain::models::Url;
+use std::time::Duration;
 
 pub struct RedisCache {
     client: Client,
@@ -53,19 +52,4 @@ impl RedisCache {
         let key = format!("url:{}", short_code);
         self.get(&key).await
     }
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum CacheError {
-    #[error("Redis error: {0}")]
-    RedisError(#[from] redis::RedisError),
-
-    #[error("Failed to serialize json value: {0}")]
-    JsonSerializationError(#[from] serde_json::Error),
-
-    #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
-
-    #[error("This is a simple error handling")]
-    Simple,
 }
