@@ -42,7 +42,7 @@ impl UrlRepository for PgUrlRepository {
         )
         .fetch_one(&self.pool)
         .await
-        .map_err(DomainError::UnexpectedError)?;
+        .map_err(DomainError::DatabaseError)?;
 
         saved_url.to_domain()
     }
@@ -51,7 +51,7 @@ impl UrlRepository for PgUrlRepository {
         let result = sqlx::query!("SELECT id FROM urls WHERE id = $1", id)
             .fetch_optional(&self.pool)
             .await
-            .map_err(DomainError::UnexpectedError)?;
+            .map_err(DomainError::DatabaseError)?;
 
         Ok(result.map(|row| row.id))
     }
@@ -64,7 +64,7 @@ impl UrlRepository for PgUrlRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(DomainError::UnexpectedError)?;
+        .map_err(DomainError::DatabaseError)?;
 
         result.map(|db_url| db_url.to_domain()).transpose()
     }
@@ -80,7 +80,7 @@ impl UrlRepository for PgUrlRepository {
         )
         .fetch_optional(&self.pool)
         .await
-        .map_err(DomainError::UnexpectedError)?;
+        .map_err(DomainError::DatabaseError)?;
 
         result.map(|db_url| db_url.to_domain()).transpose()
     }
@@ -92,7 +92,7 @@ impl UrlRepository for PgUrlRepository {
         )
         .execute(&self.pool)
         .await
-        .map_err(DomainError::UnexpectedError)?;
+        .map_err(DomainError::DatabaseError)?;
 
         Ok(result.rows_affected() > 0)
     }

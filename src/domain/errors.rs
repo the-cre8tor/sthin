@@ -15,5 +15,5 @@ pub enum DomainError {
     ValidationError(String),
 
     #[error(transparent)]
-    UnexpectedError(#[from] sqlx::Error),
+    DatabaseError(#[from] sqlx::Error),
 }
