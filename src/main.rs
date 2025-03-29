@@ -1,6 +1,6 @@
 use sthin::configuration::*;
+use sthin::infrastructure::telemetry::Telemetry;
 use sthin::startup::*;
-use sthin::telemetry::Telemetry;
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
