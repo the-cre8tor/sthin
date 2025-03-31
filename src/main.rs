@@ -1,9 +1,10 @@
+use anyhow::Result;
 use sthin::configuration::*;
 use sthin::infrastructure::telemetry::Telemetry;
 use sthin::startup::*;
 
 #[tokio::main]
-async fn main() -> anyhow::Result<()> {
+async fn main() -> Result<()> {
     let config = Configs::get().expect("Failed to read configuration");
 
     Telemetry::init_subscriber(&config.application.name, "info".into(), std::io::stdout);
