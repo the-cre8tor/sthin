@@ -7,12 +7,12 @@ use crate::{
     },
 };
 
-pub struct CreateUrlCommand<U: IUrlService> {
-    url_service: U,
+pub struct CreateUrlCommand<'a, U: IUrlService> {
+    url_service: &'a U,
 }
 
-impl<U: IUrlService> CreateUrlCommand<U> {
-    pub fn new(url_service: U) -> Self {
+impl<'a, U: IUrlService> CreateUrlCommand<'a, U> {
+    pub fn new(url_service: &'a U) -> Self {
         Self { url_service }
     }
 

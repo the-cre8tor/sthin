@@ -1,5 +1,6 @@
 use anyhow::Result;
 use sthin::configuration::*;
+use sthin::infrastructure::database::connection::Database;
 use sthin::infrastructure::telemetry::Telemetry;
 use sthin::startup::*;
 
@@ -9,7 +10,9 @@ async fn main() -> Result<()> {
 
     Telemetry::init_subscriber(&config.application.name, "info".into(), std::io::stdout);
 
-    let server = Application::build(config).await?;
+    let pool = Database::establish_connection(&config.database).await?;
+
+    let server = Application::build(config, pool).await?;
     server.run_until_stopped().await?;
 
     Ok(())

@@ -5,23 +5,23 @@ use crate::{
     domain::{
         errors::DomainError,
         models::Url,
-        repositories::UrlRepository,
+        repositories::IUrlRepository,
         value_objects::{ShortCode, ValidUrl},
     },
     infrastructure::database::models::db_url::DbUrl,
 };
 
-pub struct PgUrlRepository {
+pub struct UrlRepository {
     pool: PgPool,
 }
 
-impl PgUrlRepository {
+impl UrlRepository {
     pub fn new(pool: PgPool) -> Self {
         Self { pool }
     }
 }
 
-impl UrlRepository for PgUrlRepository {
+impl IUrlRepository for UrlRepository {
     async fn save(&self, url: &Url) -> Result<Url, DomainError> {
         let db_url = DbUrl::from_domain(url);
 
@@ -100,7 +100,7 @@ impl UrlRepository for PgUrlRepository {
     async fn exists_by_short_code(&self, short_code: &ShortCode) -> Result<bool, DomainError> {
         let result = self.find_by_short_code(short_code).await?;
 
-        Ok(result.is_none())
+        Ok(result.is_some())
     }
 
     // async fn update(&self, url: &Url) -> Result<Url, DomainError> {

@@ -1,11 +1,10 @@
 use actix_web::http::StatusCode;
-use serde::{Deserialize, Serialize};
 use serde_json::json;
 use sqlx::Error as SQLxError;
 use thiserror::Error;
 use validator::ValidationErrors;
 
-#[derive(Debug, Error, Serialize, Deserialize)]
+#[derive(Debug, Error)]
 pub enum AppError {
     // Core error types (similar to previous implementation)
     #[error("Validation error: {0}")]
@@ -54,6 +53,9 @@ pub enum AppError {
 
     #[error("Short code generation failed")]
     ShortCodeGenerationFailed,
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
 }
 
 // Error conversion and utility methods

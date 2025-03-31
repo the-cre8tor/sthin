@@ -4,7 +4,7 @@ use crate::domain::errors::DomainError;
 use crate::domain::models::Url;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
-pub trait UrlRepository: Send + Sync {
+pub trait IUrlRepository: Send + Sync {
     fn save(&self, url: &Url) -> impl Future<Output = Result<Url, DomainError>> + Send;
     fn find_by_id(
         &self,

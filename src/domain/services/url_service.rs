@@ -1,6 +1,6 @@
 use crate::domain::errors::DomainError;
 use crate::domain::models::Url;
-use crate::domain::repositories::UrlRepository;
+use crate::domain::repositories::IUrlRepository;
 use crate::domain::value_objects::{ShortCode, ValidUrl};
 
 pub trait IUrlService: Send + Sync {
@@ -11,19 +11,12 @@ pub trait IUrlService: Send + Sync {
     ) -> impl Future<Output = Result<Url, DomainError>> + Send;
 }
 
-pub struct UrlService<R: UrlRepository> {
+#[derive(Clone)]
+pub struct UrlService<R: IUrlRepository> {
     url_repo: R,
 }
 
-impl<R: UrlRepository> UrlService<R> {
-    pub fn new(url_repository: R) -> Self {
-        Self {
-            url_repo: url_repository,
-        }
-    }
-}
-
-impl<R: UrlRepository> IUrlService for UrlService<R> {
+impl<R: IUrlRepository> IUrlService for UrlService<R> {
     async fn create_short_url(
         &self,
         original_url: ValidUrl,
@@ -53,5 +46,13 @@ impl<R: UrlRepository> IUrlService for UrlService<R> {
         let created_url = self.url_repo.save(&url).await?;
 
         Ok(created_url)
+    }
+}
+
+impl<R: IUrlRepository> UrlService<R> {
+    pub fn new(url_repository: R) -> Self {
+        Self {
+            url_repo: url_repository,
+        }
     }
 }
