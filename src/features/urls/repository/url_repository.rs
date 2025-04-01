@@ -2,7 +2,7 @@ use sqlx::PgPool;
 use uuid::Uuid;
 
 use crate::features::urls::{
-    entities::DbUrl,
+    entities::UrlEntity,
     errors::DomainError,
     models::Url,
     value_objects::{ShortCode, ValidUrl},
@@ -22,10 +22,10 @@ impl UrlRepository {
 
 impl IUrlRepository for UrlRepository {
     async fn save(&self, url: &Url) -> Result<Url, DomainError> {
-        let db_url = DbUrl::from_domain(url);
+        let db_url = UrlEntity::from_domain(url);
 
         let saved_url = sqlx::query_as!(
-            DbUrl,
+            UrlEntity,
             r#"
             INSERT INTO urls (original_url, short_code, created_at, updated_at)
             VALUES ($1, $2, $3, $4)
@@ -57,7 +57,7 @@ impl IUrlRepository for UrlRepository {
 
     async fn find_by_short_code(&self, short_code: &ShortCode) -> Result<Option<Url>, DomainError> {
         let result = sqlx::query_as!(
-            DbUrl,
+            UrlEntity,
             "SELECT * FROM urls WHERE short_code = $1",
             short_code.as_ref()
         )
@@ -73,7 +73,7 @@ impl IUrlRepository for UrlRepository {
         original_url: &ValidUrl,
     ) -> Result<Option<Url>, DomainError> {
         let result = sqlx::query_as!(
-            DbUrl,
+            UrlEntity,
             "SELECT * FROM urls WHERE original_url = $1",
             original_url.as_ref()
         )

@@ -9,7 +9,7 @@ use crate::features::urls::{
 };
 
 #[derive(Debug, Clone, FromRow)]
-pub struct DbUrl {
+pub struct UrlEntity {
     pub id: Uuid,
     pub original_url: String,
     pub short_code: String,
@@ -17,7 +17,7 @@ pub struct DbUrl {
     pub updated_at: DateTime<Utc>,
 }
 
-impl DbUrl {
+impl UrlEntity {
     pub fn to_domain(&self) -> Result<Url, DomainError> {
         Ok(Url {
             id: Some(self.id),

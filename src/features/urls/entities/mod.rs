@@ -1,3 +1,3 @@
-mod db_url;
+mod url_entity;
 
-pub use db_url::*;
+pub use url_entity::*;

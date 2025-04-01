@@ -6,9 +6,9 @@ use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::Settings;
-use crate::features::urls::api::Routes;
 use crate::features::urls::handlers::health_check;
 use crate::features::urls::repository::UrlRepository;
+use crate::features::urls::routes::Routes;
 use crate::features::urls::service::UrlService;
 
 pub struct WebServer {

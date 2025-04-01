@@ -26,9 +26,9 @@ impl UrlHandler {
     ) -> Result<impl Responder, AppError> {
         let _ = dto.validate()?;
 
-        let valid_url = ValidUrl::new(dto.url.clone()).context("Failed to validate url")?;
+        let valid_url = ValidUrl::new(dto.0.url).context("Failed to validate url")?;
 
-        let url = if let Some(custom_code) = dto.custom_code.clone() {
+        let url = if let Some(custom_code) = dto.0.custom_code {
             let short_code =
                 ShortCode::new(Some(custom_code)).context("Failed to validate shortcode")?;
 
