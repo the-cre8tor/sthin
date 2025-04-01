@@ -1,5 +1,5 @@
 use super::error::CacheError;
-use redis::{AsyncCommands, Client};
+use redis::{AsyncCommands, Client, ConnectionLike};
 use serde::{Serialize, de::DeserializeOwned};
 use std::time::Duration;
 
@@ -8,8 +8,21 @@ pub struct RedisCache {
 }
 
 impl RedisCache {
+    #[tracing::instrument(
+        name = "Redis client connecting",
+        skip(redis_url),
+        fields(is_redis_connected=tracing::field::Empty)
+    )]
     pub fn new(redis_url: &str) -> Result<Self, CacheError> {
-        let client = Client::open(redis_url)?;
+        let mut client = Client::open(redis_url)?;
+
+        let is_redis_connected = client.check_connection();
+
+        tracing::Span::current().record(
+            "is_redis_connected",
+            tracing::field::display(is_redis_connected),
+        );
+
         Ok(RedisCache { client })
     }
 

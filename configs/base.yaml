@@ -7,3 +7,5 @@ database:
   username: "app"
   password: "secret"
   database_name: "sthin"
+redis:
+  uri: "redis://127.0.0.1:6370"

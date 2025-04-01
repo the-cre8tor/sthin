@@ -8,6 +8,7 @@ use sqlx::postgres::{PgConnectOptions, PgSslMode};
 pub struct Settings {
     pub application: ApplicationSettings,
     pub database: DatabaseSettings,
+    pub redis: RedisSettings,
 }
 
 #[derive(serde::Deserialize)]
@@ -27,6 +28,11 @@ pub struct DatabaseSettings {
     pub host: String,
     pub database_name: String,
     pub require_ssl: bool,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct RedisSettings {
+    pub uri: String,
 }
 
 pub struct Configs;
