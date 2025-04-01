@@ -1,8 +1,8 @@
 use uuid::Uuid;
 
-use crate::domain::errors::DomainError;
-use crate::domain::models::Url;
-use crate::domain::value_objects::{ShortCode, ValidUrl};
+use crate::features::urls::errors::DomainError;
+use crate::features::urls::models::Url;
+use crate::features::urls::value_objects::{ShortCode, ValidUrl};
 
 pub trait IUrlRepository: Send + Sync {
     fn save(&self, url: &Url) -> impl Future<Output = Result<Url, DomainError>> + Send;

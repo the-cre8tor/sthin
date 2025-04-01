@@ -1,4 +1,4 @@
-use actix_web::http::StatusCode;
+use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use serde_json::json;
 use sqlx::Error as SQLxError;
 use thiserror::Error;
@@ -58,39 +58,85 @@ pub enum AppError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
-// Error conversion and utility methods
-impl AppError {
-    /// Convert error to an HTTP status code
-    pub fn status_code(&self) -> StatusCode {
+impl ResponseError for AppError {
+    fn error_response(&self) -> HttpResponse {
         match self {
-            Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-            Self::NotFound => StatusCode::NOT_FOUND,
-            Self::Unauthorized => StatusCode::UNAUTHORIZED,
-            Self::Forbidden => StatusCode::FORBIDDEN,
-            Self::UniqueConstraintViolation(_) => StatusCode::CONFLICT,
-            Self::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::ValidationError(msg) => HttpResponse::BadRequest().json(json!({
+                "error": "Validation Error",
+                "message": msg
+            })),
+
+            AppError::NotFound => HttpResponse::NotFound().json(json!({
+                "error": "Not Found",
+                "message": AppError::NotFound.to_string()
+            })),
+
+            AppError::DatabaseQueryError(err) => {
+                // log::error!("Database error: {:?}", err);
+                HttpResponse::InternalServerError().json(json!({
+                    "error": "Internal Server Error",
+                    "message": "A database error occurred"
+                }))
+            }
+            AppError::UnexpectedError(msg) => {
+                // log::error!("Internal error: {}", msg);
+                HttpResponse::InternalServerError().json(json!({
+                    "error": "Internal Server Error",
+                    "message": "An internal error occurred"
+                }))
+            }
+            _ => HttpResponse::InternalServerError().json(json!({
+                "error": "Internal Server Error",
+                "message": "An internal error occurred"
+            })),
         }
     }
 
-    /// Generate a structured error response
-    pub fn error_response(&self) -> serde_json::Value {
+    fn status_code(&self) -> StatusCode {
         match self {
-            Self::ValidationError(msg) => json!({
-                "type": "validation_error",
-                "message": msg
-            }),
-            Self::NotFound => json!({
-                "type": "not_found",
-                "message": "The requested resource could not be found"
-            }),
-            _ => json!({
-                "type": "error",
-                "message": self.to_string()
-            }),
+            AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
+            AppError::NotFound => StatusCode::NOT_FOUND,
+            AppError::DatabaseQueryError(_) | AppError::UnexpectedError(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+            _ => StatusCode::INTERNAL_SERVER_ERROR,
         }
     }
 }
+
+// Error conversion and utility methods
+// impl AppError {
+//     /// Convert error to an HTTP status code
+//     pub fn status_code(&self) -> StatusCode {
+//         match self {
+//             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
+//             Self::NotFound => StatusCode::NOT_FOUND,
+//             Self::Unauthorized => StatusCode::UNAUTHORIZED,
+//             Self::Forbidden => StatusCode::FORBIDDEN,
+//             Self::UniqueConstraintViolation(_) => StatusCode::CONFLICT,
+//             Self::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
+//             _ => StatusCode::INTERNAL_SERVER_ERROR,
+//         }
+//     }
+
+//     /// Generate a structured error response
+//     pub fn error_response(&self) -> serde_json::Value {
+//         match self {
+//             Self::ValidationError(msg) => json!({
+//                 "type": "validation_error",
+//                 "message": msg
+//             }),
+//             Self::NotFound => json!({
+//                 "type": "not_found",
+//                 "message": "The requested resource could not be found"
+//             }),
+//             _ => json!({
+//                 "type": "error",
+//                 "message": self.to_string()
+//             }),
+//         }
+//     }
+// }
 
 // Conversion traits for various error types
 impl From<SQLxError> for AppError {

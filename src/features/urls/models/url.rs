@@ -1,7 +1,7 @@
 use chrono::{DateTime, Utc};
 use uuid::Uuid;
 
-use crate::domain::value_objects::{ShortCode, ValidUrl};
+use crate::features::urls::value_objects::{ShortCode, ValidUrl};
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct Url {

@@ -1,6 +1,4 @@
-pub mod application;
 pub mod configuration;
-pub mod domain;
 pub mod error;
+pub mod features;
 pub mod infrastructure;
-pub mod interfaces;

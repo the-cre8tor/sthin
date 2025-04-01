@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use crate::{configuration::Configs, domain::models::Url};
+use crate::{configuration::Configs, features::urls::models::Url};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UrlResponseDto {

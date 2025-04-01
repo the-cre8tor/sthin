@@ -1,6 +1,7 @@
-use crate::domain::errors::DomainError;
 use base64::{Engine as _, engine::general_purpose};
 use rand::Rng;
+
+use crate::features::urls::errors::DomainError;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ShortCode(String);

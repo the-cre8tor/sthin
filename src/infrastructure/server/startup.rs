@@ -6,10 +6,10 @@ use std::net::TcpListener;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::Settings;
-use crate::domain::services::UrlService;
-use crate::infrastructure::database::repositories::url_repository::UrlRepository;
-use crate::interfaces::http::Routes;
-use crate::interfaces::http::handlers::health_check;
+use crate::features::urls::api::Routes;
+use crate::features::urls::handlers::health_check;
+use crate::features::urls::repository::UrlRepository;
+use crate::features::urls::service::UrlService;
 
 pub struct WebServer {
     port: u16,

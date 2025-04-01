@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
-use crate::domain::{
+use crate::features::urls::{
     errors::DomainError,
     models::Url,
     value_objects::{ShortCode, ValidUrl},

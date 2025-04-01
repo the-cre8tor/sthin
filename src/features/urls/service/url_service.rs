@@ -1,7 +1,7 @@
-use crate::domain::errors::DomainError;
-use crate::domain::models::Url;
-use crate::domain::repositories::IUrlRepository;
-use crate::domain::value_objects::{ShortCode, ValidUrl};
+use crate::features::urls::errors::DomainError;
+use crate::features::urls::models::Url;
+use crate::features::urls::repository::IUrlRepository;
+use crate::features::urls::value_objects::{ShortCode, ValidUrl};
 
 pub trait IUrlService: Send + Sync {
     fn create_short_url(

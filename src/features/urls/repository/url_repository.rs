@@ -1,15 +1,14 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{
-    domain::{
-        errors::DomainError,
-        models::Url,
-        repositories::IUrlRepository,
-        value_objects::{ShortCode, ValidUrl},
-    },
-    infrastructure::database::models::db_url::DbUrl,
+use crate::features::urls::{
+    entities::DbUrl,
+    errors::DomainError,
+    models::Url,
+    value_objects::{ShortCode, ValidUrl},
 };
+
+use super::url_repository_trait::IUrlRepository;
 
 pub struct UrlRepository {
     pool: PgPool,
