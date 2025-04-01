@@ -11,16 +11,16 @@ use crate::infrastructure::database::repositories::url_repository::UrlRepository
 use crate::interfaces::http::Routes;
 use crate::routes::health_check;
 
-pub struct Application {
+pub struct WebServer {
     port: u16,
     server: Server,
 }
 
-impl Application {
+impl WebServer {
     pub async fn build(
         config: Settings,
         connection_pool: PgPool,
-    ) -> Result<Application, anyhow::Error> {
+    ) -> Result<WebServer, anyhow::Error> {
         let address = format!("{}:{}", config.application.host, config.application.port);
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();

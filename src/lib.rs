@@ -5,4 +5,3 @@ pub mod error;
 pub mod infrastructure;
 pub mod interfaces;
 pub mod routes;
-pub mod startup;
