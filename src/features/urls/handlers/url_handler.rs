@@ -15,6 +15,7 @@ use crate::{
         service::{IUrlService, UrlService},
         value_objects::{ShortCode, ValidUrl},
     },
+    shared::api_response::Success,
 };
 
 pub struct UrlHandler;
@@ -40,7 +41,11 @@ impl UrlHandler {
         };
 
         match url {
-            Ok(url) => Ok(HttpResponse::Created().json(url)),
+            Ok(url) => Ok(HttpResponse::Created().json(Success {
+                status: "success",
+                message: "URL shortcode created successfully",
+                data: url,
+            })),
             Err(error) => match error {
                 DomainError::InvalidUrl => Err(AppError::NotFound),
                 _ => Ok(HttpResponse::InternalServerError().json(

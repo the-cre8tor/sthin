@@ -6,7 +6,6 @@ use validator::ValidationErrors;
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    // Core error types (similar to previous implementation)
     #[error("Validation error: {0}")]
     ValidationError(String),
 
@@ -42,7 +41,7 @@ pub enum AppError {
 
     // Internal server errors
     #[error("Internal server error: {0}")]
-    InternalError(String),
+    Internal(String),
 
     // Domain-specific errors
     #[error("URL generation failed")]
@@ -55,7 +54,7 @@ pub enum AppError {
     ShortCodeGenerationFailed,
 
     #[error(transparent)]
-    UnexpectedError(#[from] anyhow::Error),
+    Unexpected(#[from] anyhow::Error),
 }
 
 impl ResponseError for AppError {
@@ -78,7 +77,7 @@ impl ResponseError for AppError {
                     "message": "A database error occurred"
                 }))
             }
-            AppError::UnexpectedError(msg) => {
+            AppError::Unexpected(msg) => {
                 // log::error!("Internal error: {}", msg);
                 HttpResponse::InternalServerError().json(json!({
                     "error": "Internal Server Error",
@@ -96,7 +95,7 @@ impl ResponseError for AppError {
         match self {
             AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
             AppError::NotFound => StatusCode::NOT_FOUND,
-            AppError::DatabaseQueryError(_) | AppError::UnexpectedError(_) => {
+            AppError::DatabaseQueryError(_) | AppError::Unexpected(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
             _ => StatusCode::INTERNAL_SERVER_ERROR,
@@ -157,7 +156,7 @@ impl From<SQLxError> for AppError {
             SQLxError::PoolTimedOut | SQLxError::PoolClosed => {
                 AppError::DatabaseConnectionError(error.to_string())
             }
-            _ => AppError::InternalError(error.to_string()),
+            _ => AppError::Internal(error.to_string()),
         }
     }
 }
@@ -188,7 +187,7 @@ pub trait ErrorLogging {
 impl ErrorLogging for AppError {
     fn log(&self) {
         match self {
-            AppError::InternalError(msg) | AppError::DatabaseQueryError(msg) => {
+            AppError::Internal(msg) | AppError::DatabaseQueryError(msg) => {
                 tracing::error!("Critical error: {}", msg)
             }
             AppError::ValidationError(msg) => {
@@ -210,7 +209,7 @@ impl<T> ErrorContext<T> for std::result::Result<T, AppError> {
     fn context(self, message: &str) -> Result<T> {
         self.map_err(|mut err| {
             match &mut err {
-                AppError::InternalError(msg) => {
+                AppError::Internal(msg) => {
                     msg.push_str(&format!(". Context: {}", message));
                 }
                 _ => {}
