@@ -9,7 +9,7 @@ use crate::configuration::Settings;
 use crate::domain::services::UrlService;
 use crate::infrastructure::database::repositories::url_repository::UrlRepository;
 use crate::interfaces::http::Routes;
-use crate::routes::health_check;
+use crate::interfaces::http::handlers::health_check;
 
 pub struct WebServer {
     port: u16,
@@ -37,7 +37,7 @@ impl WebServer {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(TracingLogger::default())
-                .route("/healthz", get().to(health_check))
+                .route("healthz", get().to(health_check))
                 .configure(Routes::configure_routes)
                 .app_data(url_service.clone())
         })
