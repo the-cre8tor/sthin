@@ -27,9 +27,9 @@ impl From<UrlError> for AppError {
     fn from(error: UrlError) -> Self {
         match error {
             UrlError::InvalidUrl(msg)
-            | UrlError::NotFound(msg)
-            | UrlError::InvalidShortCode(msg) => AppError::Validation(msg),
-            UrlError::Duplicate(msg) => AppError::NotFound(msg),
+            | UrlError::InvalidShortCode(msg)
+            | UrlError::Duplicate(msg) => AppError::Validation(msg),
+            UrlError::NotFound(msg) => AppError::NotFound(msg),
             UrlError::UrlTooLong(len) => AppError::Validation(len.to_string()),
             UrlError::Database(error) => AppError::Database(error),
         }

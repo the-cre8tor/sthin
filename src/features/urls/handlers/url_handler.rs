@@ -1,6 +1,6 @@
 use actix_web::{
-    Responder,
-    web::{Data, Json},
+    HttpResponse, Responder,
+    web::{Data, Json, Path},
 };
 
 use crate::{
@@ -15,6 +15,11 @@ use crate::{
 };
 
 pub struct UrlHandler;
+
+#[derive(serde::Deserialize, Debug)]
+pub struct ShortCodePath {
+    pub code: String,
+}
 
 impl UrlHandler {
     pub async fn create_short_url(
@@ -39,5 +44,16 @@ impl UrlHandler {
             Ok(url) => Ok(ApiResponse::success(url)),
             Err(error) => Err(error.into()),
         }
+    }
+
+    pub async fn retreive_url_by_short_code(
+        param: Path<String>,
+        url_service: Data<UrlService<UrlRepository>>,
+    ) -> Result<HttpResponse, AppError> {
+        let short_code = ShortCode::new(Some(param.into_inner()))?;
+
+        let result = url_service.get_url_by_short_code(short_code).await?;
+
+        Ok(ApiResponse::success(result))
     }
 }

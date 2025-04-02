@@ -9,6 +9,11 @@ pub trait IUrlService: Send + Sync {
         original_url: ValidUrl,
         short_code: Option<ShortCode>,
     ) -> impl Future<Output = Result<Url, UrlError>> + Send;
+
+    fn get_url_by_short_code(
+        &self,
+        short_code: ShortCode,
+    ) -> impl Future<Output = Result<Url, UrlError>> + Send;
 }
 
 #[derive(Clone)]
@@ -48,6 +53,20 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
         let created_url = self.url_repo.save(&url).await?;
 
         Ok(created_url)
+    }
+
+    async fn get_url_by_short_code(&self, short_code: ShortCode) -> Result<Url, UrlError> {
+        let result = self.url_repo.find_by_short_code(&short_code).await?;
+
+        if let Some(url) = result {
+            Ok(url)
+        } else {
+            let msg = format!(
+                "We're unable to find any url link to this short code: {}",
+                short_code.as_str()
+            );
+            Err(UrlError::NotFound(msg))
+        }
     }
 }
 
