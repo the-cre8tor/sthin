@@ -57,7 +57,7 @@ impl IUrlRepository for UrlRepository {
         let result = sqlx::query_as!(
             UrlEntity,
             "SELECT * FROM urls WHERE short_code = $1",
-            short_code.as_ref()
+            short_code.as_str()
         )
         .fetch_optional(&self.pool)
         .await?;

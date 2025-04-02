@@ -32,7 +32,7 @@ impl UrlEntity {
         Self {
             id: domain_url.id.unwrap_or_else(|| Uuid::new_v4()),
             original_url: String::from(domain_url.original_url.as_ref()),
-            short_code: String::from(domain_url.short_code.as_ref()),
+            short_code: String::from(domain_url.short_code.as_str()),
             created_at: domain_url.created_at.unwrap_or_else(Utc::now),
             updated_at: domain_url.updated_at.unwrap_or_else(Utc::now),
         }
