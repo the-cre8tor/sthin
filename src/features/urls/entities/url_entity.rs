@@ -3,7 +3,7 @@ use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
 use crate::features::urls::{
-    errors::DomainError,
+    errors::UrlError,
     models::Url,
     value_objects::{ShortCode, ValidUrl},
 };
@@ -18,7 +18,7 @@ pub struct UrlEntity {
 }
 
 impl UrlEntity {
-    pub fn to_domain(&self) -> Result<Url, DomainError> {
+    pub fn to_domain(&self) -> Result<Url, UrlError> {
         Ok(Url {
             id: Some(self.id),
             original_url: ValidUrl::new(self.original_url.clone())?,

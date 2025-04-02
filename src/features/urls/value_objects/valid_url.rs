@@ -1,23 +1,97 @@
+use lazy_static::lazy_static;
 use url::Url as ParseUrl;
 
-use crate::features::urls::errors::DomainError;
+use crate::features::urls::errors::UrlError;
+
+lazy_static! {
+    static ref VALID_TLDS: Vec<&'static str> = vec![
+        "com", "org", "net", "edu", "gov", "mil", "int", "io", "dev", "app", "co", "me", "us",
+        "uk", "de",
+    ];
+}
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ValidUrl(String);
 
 impl ValidUrl {
-    pub fn new(url: String) -> Result<Self, DomainError> {
+    pub fn new(url: String) -> Result<Self, UrlError> {
         match ParseUrl::parse(&url) {
             Ok(parsed) if parsed.scheme() == "http" || parsed.scheme() == "https" => {
                 if url.len() > 2048 {
-                    return Err(DomainError::UrlTooLong(2048));
+                    return Err(UrlError::UrlTooLong(2048));
+                }
+
+                if parsed.host_str().is_none() {
+                    return Err(UrlError::InvalidUrl("Missing host name".to_string()));
+                }
+
+                match parsed.host_str() {
+                    Some(domain) => {
+                        Self::validate_domain(domain)?;
+                        Self::validate_tld(domain)?;
+                    }
+                    _ => {}
                 }
 
                 Ok(Self(url))
             }
-            Ok(_) => Err(DomainError::InvalidUrl),
-            Err(_) => Err(DomainError::InvalidUrl),
+            Ok(_) => Err(UrlError::InvalidUrl(
+                "The URL must start with either http/https".to_string(),
+            )),
+            Err(msg) => {
+                println!("Parsed error: {}", msg);
+                Err(UrlError::InvalidUrl(msg.to_string()))
+            }
         }
+    }
+
+    fn validate_domain(domain: &str) -> Result<(), UrlError> {
+        if !domain.contains(".") {
+            return Err(UrlError::InvalidUrl(
+                "Domain must contain at least one dot".into(),
+            ));
+        }
+
+        let parts: Vec<&str> = domain.split('.').collect();
+
+        if parts.len() < 2 {
+            return Err(UrlError::InvalidUrl(
+                "Domain must have at least two parts".into(),
+            ));
+        }
+
+        for part in parts {
+            if part.is_empty() {
+                return Err(UrlError::InvalidUrl("Domain parts cannot be empty".into()));
+            }
+
+            if part.starts_with('-') || part.ends_with('-') {
+                return Err(UrlError::InvalidUrl(
+                    "Domain parts cannot start or end with hyphen".into(),
+                ));
+            }
+
+            if !part.chars().all(|c| c.is_ascii_alphanumeric() || c == '-') {
+                return Err(UrlError::InvalidUrl(
+                    "Domain parts can only contain letters, numbers, and hyphens".into(),
+                ));
+            }
+        }
+
+        Ok(())
+    }
+
+    fn validate_tld(domain: &str) -> Result<(), UrlError> {
+        let tld = domain
+            .split('.')
+            .last()
+            .ok_or_else(|| UrlError::InvalidUrl("Missing TLD".into()))?;
+
+        if !VALID_TLDS.contains(&tld) {
+            return Err(UrlError::InvalidUrl(format!("Invalid TLD: {}", tld)));
+        }
+
+        Ok(())
     }
 
     pub fn as_str(&self) -> &str {

@@ -1,221 +1,129 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
-use serde_json::json;
-use sqlx::Error as SQLxError;
+use serde_json::{Value, json};
 use thiserror::Error;
 use validator::ValidationErrors;
 
+use crate::infrastructure::http::ApiResponse;
+
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error("Validation error: {0}")]
-    ValidationError(String),
+    #[error("Validation failed")]
+    Validation(String),
 
-    #[error("Resource not found")]
-    NotFound,
+    #[error("DTO validation error")]
+    RawValidator(#[from] ValidationErrors),
 
-    #[error("Unauthorized access")]
-    Unauthorized,
+    #[error("Not found: {0}")]
+    NotFound(String),
 
-    #[error("Forbidden action")]
-    Forbidden,
+    #[error("Unauthorized: {0}")]
+    Unathorized(String),
 
-    // Database errors
-    #[error("Database connection error: {0}")]
-    DatabaseConnectionError(String),
+    #[error("Database error")]
+    Database(#[from] sqlx::Error),
 
-    #[error("Database query error: {0}")]
-    DatabaseQueryError(String),
-
-    #[error("Unique constraint violation: {0}")]
-    UniqueConstraintViolation(String),
-
-    // Infrastructure errors
-    #[error("Cache error: {0}")]
-    CacheError(String),
-
-    #[error("Rate limit exceeded")]
-    RateLimitExceeded,
-
-    // Serialization errors
-    #[error("Serialization error: {0}")]
-    SerializationError(String),
-
-    // Internal server errors
-    #[error("Internal server error: {0}")]
-    Internal(String),
-
-    // Domain-specific errors
-    #[error("URL generation failed")]
-    UrlGenerationFailed,
-
-    #[error("Invalid URL format")]
-    InvalidUrlFormat,
-
-    #[error("Short code generation failed")]
-    ShortCodeGenerationFailed,
-
-    #[error(transparent)]
-    Unexpected(#[from] anyhow::Error),
+    #[error("Internal error")]
+    Internal(#[from] anyhow::Error),
 }
 
 impl ResponseError for AppError {
     fn error_response(&self) -> HttpResponse {
         match self {
-            AppError::ValidationError(msg) => HttpResponse::BadRequest().json(json!({
-                "error": "Validation Error",
-                "message": msg
-            })),
-
-            AppError::NotFound => HttpResponse::NotFound().json(json!({
-                "error": "Not Found",
-                "message": AppError::NotFound.to_string()
-            })),
-
-            AppError::DatabaseQueryError(err) => {
-                // log::error!("Database error: {:?}", err);
-                HttpResponse::InternalServerError().json(json!({
-                    "error": "Internal Server Error",
-                    "message": "A database error occurred"
-                }))
+            AppError::Validation(errors) => {
+                ApiResponse::<Value>::fail(json!({"validation": errors}), StatusCode::BAD_REQUEST)
             }
-            AppError::Unexpected(msg) => {
-                // log::error!("Internal error: {}", msg);
-                HttpResponse::InternalServerError().json(json!({
-                    "error": "Internal Server Error",
-                    "message": "An internal error occurred"
-                }))
+            AppError::NotFound(msg) => {
+                ApiResponse::<Value>::fail(json!({"message": msg}), StatusCode::NOT_FOUND)
             }
-            _ => HttpResponse::InternalServerError().json(json!({
-                "error": "Internal Server Error",
-                "message": "An internal error occurred"
-            })),
-        }
-    }
-
-    fn status_code(&self) -> StatusCode {
-        match self {
-            AppError::ValidationError(_) => StatusCode::BAD_REQUEST,
-            AppError::NotFound => StatusCode::NOT_FOUND,
-            AppError::DatabaseQueryError(_) | AppError::Unexpected(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
+            AppError::Database(err) => {
+                println!("Database error: {}", err);
+                ApiResponse::<&str>::error("A database error occurred")
             }
-            _ => StatusCode::INTERNAL_SERVER_ERROR,
+            AppError::Internal(_msg) => ApiResponse::<&str>::error("An internal error occurred"),
+            _ => ApiResponse::<&str>::error("An internal error occurred"),
         }
     }
 }
 
-// Error conversion and utility methods
-// impl AppError {
-//     /// Convert error to an HTTP status code
-//     pub fn status_code(&self) -> StatusCode {
-//         match self {
-//             Self::ValidationError(_) => StatusCode::BAD_REQUEST,
-//             Self::NotFound => StatusCode::NOT_FOUND,
-//             Self::Unauthorized => StatusCode::UNAUTHORIZED,
-//             Self::Forbidden => StatusCode::FORBIDDEN,
-//             Self::UniqueConstraintViolation(_) => StatusCode::CONFLICT,
-//             Self::RateLimitExceeded => StatusCode::TOO_MANY_REQUESTS,
-//             _ => StatusCode::INTERNAL_SERVER_ERROR,
-//         }
-//     }
-
-//     /// Generate a structured error response
-//     pub fn error_response(&self) -> serde_json::Value {
-//         match self {
-//             Self::ValidationError(msg) => json!({
-//                 "type": "validation_error",
-//                 "message": msg
-//             }),
-//             Self::NotFound => json!({
-//                 "type": "not_found",
-//                 "message": "The requested resource could not be found"
-//             }),
-//             _ => json!({
-//                 "type": "error",
-//                 "message": self.to_string()
-//             }),
+// Conversion traits for various error types
+// impl From<sqlx::Error> for AppError {
+//     fn from(error: sqlx::Error) -> Self {
+//         match error {
+//             sqlx::Error::RowNotFound => AppError::NotFound,
+//             sqlx::Error::Database(db_error) => {
+//                 // Specific database error handling
+//                 if let Some(code) = db_error.code() {
+//                     match code.as_ref() {
+//                         "23505" => AppError::UniqueConstraintViolation(db_error.to_string()),
+//                         _ => AppError::DatabaseQueryError(db_error.to_string()),
+//                     }
+//                 } else {
+//                     AppError::DatabaseQueryError(db_error.to_string())
+//                 }
+//             }
+//             sqlx::Error::PoolTimedOut | SQLxError::PoolClosed => {
+//                 AppError::DatabaseConnectionError(error.to_string())
+//             }
+//             _ => AppError::Internal(error.to_string()),
 //         }
 //     }
 // }
 
-// Conversion traits for various error types
-impl From<SQLxError> for AppError {
-    fn from(error: SQLxError) -> Self {
-        match error {
-            SQLxError::RowNotFound => AppError::NotFound,
-            SQLxError::Database(db_error) => {
-                // Specific database error handling
-                if let Some(code) = db_error.code() {
-                    match code.as_ref() {
-                        "23505" => AppError::UniqueConstraintViolation(db_error.to_string()),
-                        _ => AppError::DatabaseQueryError(db_error.to_string()),
-                    }
-                } else {
-                    AppError::DatabaseQueryError(db_error.to_string())
-                }
-            }
-            SQLxError::PoolTimedOut | SQLxError::PoolClosed => {
-                AppError::DatabaseConnectionError(error.to_string())
-            }
-            _ => AppError::Internal(error.to_string()),
-        }
-    }
-}
-
 // Conversion for validation errors
-impl From<ValidationErrors> for AppError {
-    fn from(errors: ValidationErrors) -> Self {
-        let error_messages: Vec<String> = errors
-            .field_errors()
-            .iter()
-            .flat_map(|(field, field_errors)| {
-                field_errors
-                    .iter()
-                    .map(|error| format!("{}: {}", field, error))
-                    .collect::<Vec<String>>()
-            })
-            .collect();
+// impl From<ValidationErrors> for AppError {
+//     fn from(errors: ValidationErrors) -> Self {
+//         let error_messages: Vec<String> = errors
+//             .field_errors()
+//             .iter()
+//             .flat_map(|(field, field_errors)| {
+//                 field_errors
+//                     .iter()
+//                     .map(|error| format!("{}: {}", field, error))
+//                     .collect::<Vec<String>>()
+//             })
+//             .collect();
 
-        AppError::ValidationError(error_messages.join(", "))
-    }
-}
+//         AppError::Validation(error_messages.join(", "))
+//     }
+// }
 
 // Logging trait for errors
-pub trait ErrorLogging {
-    fn log(&self);
-}
+// pub trait ErrorLogging {
+//     fn log(&self);
+// }
 
-impl ErrorLogging for AppError {
-    fn log(&self) {
-        match self {
-            AppError::Internal(msg) | AppError::DatabaseQueryError(msg) => {
-                tracing::error!("Critical error: {}", msg)
-            }
-            AppError::ValidationError(msg) => {
-                tracing::warn!("Validation error: {}", msg)
-            }
-            _ => tracing::debug!("Error occured: {}", self),
-        }
-    }
-}
+// impl ErrorLogging for AppError {
+//     fn log(&self) {
+//         match self {
+//             AppError::Internal(msg) | AppError::DatabaseQueryError(msg) => {
+//                 tracing::error!("Critical error: {}", msg)
+//             }
+//             AppError::ValidationError(msg) => {
+//                 tracing::warn!("Validation error: {}", msg)
+//             }
+//             _ => tracing::debug!("Error occured: {}", self),
+//         }
+//     }
+// }
 
 // Utility for result type with AppError
-pub type Result<T> = std::result::Result<T, AppError>;
+// pub type Result<T> = std::result::Result<T, AppError>;
 
-pub trait ErrorContext<T> {
-    fn context(self, message: &str) -> Result<T>;
-}
+// pub trait ErrorContext<T> {
+//     fn context(self, message: &str) -> Result<T>;
+// }
 
-impl<T> ErrorContext<T> for std::result::Result<T, AppError> {
-    fn context(self, message: &str) -> Result<T> {
-        self.map_err(|mut err| {
-            match &mut err {
-                AppError::Internal(msg) => {
-                    msg.push_str(&format!(". Context: {}", message));
-                }
-                _ => {}
-            }
+// impl<T> ErrorContext<T> for std::result::Result<T, AppError> {
+//     fn context(self, message: &str) -> Result<T> {
+//         self.map_err(|mut err| {
+//             match &mut err {
+//                 AppError::Internal(msg) => {
+//                     msg.push_str(&format!(". Context: {}", message));
+//                 }
+//                 _ => {}
+//             }
 
-            err
-        })
-    }
-}
+//             err
+//         })
+//     }
+// }

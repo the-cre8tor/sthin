@@ -1,4 +1,4 @@
-use crate::features::urls::errors::DomainError;
+use crate::features::urls::errors::UrlError;
 use crate::features::urls::models::Url;
 use crate::features::urls::repository::IUrlRepository;
 use crate::features::urls::value_objects::{ShortCode, ValidUrl};
@@ -8,7 +8,7 @@ pub trait IUrlService: Send + Sync {
         &self,
         original_url: ValidUrl,
         short_code: Option<ShortCode>,
-    ) -> impl Future<Output = Result<Url, DomainError>> + Send;
+    ) -> impl Future<Output = Result<Url, UrlError>> + Send;
 }
 
 #[derive(Clone)]
@@ -21,7 +21,7 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
         &self,
         original_url: ValidUrl,
         short_code: Option<ShortCode>,
-    ) -> Result<Url, DomainError> {
+    ) -> Result<Url, UrlError> {
         if let Some(existing) = self.url_repo.find_by_original_url(&original_url).await? {
             return Ok(existing);
         }
@@ -35,7 +35,9 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
 
         while self.url_repo.exists_by_short_code(&short_code).await? {
             if attempts >= 5 {
-                return Err(DomainError::ShortcodeConflict);
+                return Err(UrlError::Duplicate(String::from(
+                    "We currently can't find a unique short code for you, please try again",
+                )));
             }
 
             short_code = ShortCode::new(None)?;

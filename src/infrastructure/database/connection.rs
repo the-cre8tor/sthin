@@ -5,9 +5,9 @@ pub struct DatabasePool;
 
 impl DatabasePool {
     pub async fn new(config: &DatabaseSettings) -> Result<PgPool, AppError> {
-        PgPoolOptions::new()
-            .connect_lazy(&config.connection_string())
-            .map_err(|error| AppError::DatabaseConnectionError(error.to_string()))
+        let pool = PgPoolOptions::new().connect_lazy(&config.connection_string())?;
+
+        Ok(pool)
     }
 
     // async fn _transaction<F, Fut, R, E>(&self, callback: F) -> Result<R, E>

@@ -1,13 +1,13 @@
 use base64::{Engine as _, engine::general_purpose};
 use rand::Rng;
 
-use crate::features::urls::errors::DomainError;
+use crate::features::urls::errors::UrlError;
 
 #[derive(serde::Serialize, serde::Deserialize, Debug)]
 pub struct ShortCode(String);
 
 impl ShortCode {
-    pub fn new(custom_code: Option<String>) -> Result<Self, DomainError> {
+    pub fn new(custom_code: Option<String>) -> Result<Self, UrlError> {
         let short_code = if let Some(custom_value) = custom_code {
             Self(custom_value)
         } else {
