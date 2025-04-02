@@ -114,3 +114,63 @@ impl Into<String> for ValidUrl {
         self.0
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn test_valid_urls() {
+        let valid_urls = vec![
+            "https://www.google.com",
+            "http://example.org",
+            "https://sub.domain.co.uk",
+            "http://test.io",
+        ];
+
+        for url in valid_urls {
+            assert!(
+                ValidUrl::new(url.to_string()).is_ok(),
+                "URL should be valid: {}",
+                url
+            );
+        }
+    }
+
+    #[test]
+    fn test_invalid_urls() {
+        let invalid_urls = vec![
+            "http://www.google",
+            "http://google",
+            "http://google.",
+            "http://.com",
+            "http://google..com",
+            "http://google-.com",
+            "http://goo gle.com",
+            "http://göogle.com",
+        ];
+
+        for url in invalid_urls {
+            assert!(
+                ValidUrl::new(url.into()).is_err(),
+                "URL should be invalid: {}",
+                url
+            );
+        }
+    }
+
+    #[test]
+    fn test_tld_validation() {
+        // Should fail with invalid TLD
+        let result = ValidUrl::new("http://example.invalid".into());
+        let message = String::from_str("Invalid TLD: {}");
+
+        assert!(matches!(result, Err(UrlError::InvalidUrl(message))));
+
+        // Should pass with valid TLD
+        let result = ValidUrl::new("http://example.com".into());
+        assert!(result.is_ok());
+    }
+}
