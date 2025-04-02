@@ -1,17 +1,12 @@
 use actix_web::{
-    HttpResponse, Responder,
-    http::StatusCode,
+    Responder,
     web::{Data, Json},
 };
-use anyhow::Context;
-use serde_json::json;
-use validator::Validate;
 
 use crate::{
     error::AppError,
     features::urls::{
         dtos::CreateUrlDto,
-        errors::UrlError,
         repository::UrlRepository,
         service::{IUrlService, UrlService},
         value_objects::{ShortCode, ValidUrl},
@@ -30,11 +25,8 @@ impl UrlHandler {
 
         let valid_url = ValidUrl::new(dto.0.url)?;
 
-        println!("escaped url: {:?}", valid_url);
-
         let url = if let Some(custom_code) = dto.0.custom_code {
-            let short_code =
-                ShortCode::new(Some(custom_code)).context("Failed to validate shortcode")?;
+            let short_code = ShortCode::new(Some(custom_code))?;
 
             url_service
                 .create_short_url(valid_url, Some(short_code))

@@ -12,7 +12,7 @@ async fn main() -> Result<()> {
     Telemetry::init_subscriber(&config.application.name, "info".into(), std::io::stdout);
 
     let pool = DatabasePool::new(&config.database).await?;
-    let redis = RedisCache::new(&config.redis.uri);
+    let _redis = RedisCache::new(&config.redis.uri);
 
     let server = WebServer::build(config, pool).await?;
     server.run_until_stopped().await?;

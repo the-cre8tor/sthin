@@ -1,14 +1,11 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::{
-    error::AppError,
-    features::urls::{
-        entities::UrlEntity,
-        errors::UrlError,
-        models::Url,
-        value_objects::{ShortCode, ValidUrl},
-    },
+use crate::features::urls::{
+    entities::UrlEntity,
+    errors::UrlError,
+    models::Url,
+    value_objects::{ShortCode, ValidUrl},
 };
 
 use super::url_repository_trait::IUrlRepository;
