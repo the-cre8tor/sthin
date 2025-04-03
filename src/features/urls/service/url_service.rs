@@ -14,11 +14,25 @@ pub trait IUrlService: Send + Sync {
         &self,
         short_code: ShortCode,
     ) -> impl Future<Output = Result<Url, UrlError>> + Send;
+
+    fn update_url_by_short_code(
+        &self,
+        short_code: ShortCode,
+        valid_url: ValidUrl,
+    ) -> impl Future<Output = Result<Url, UrlError>> + Send;
 }
 
 #[derive(Clone)]
 pub struct UrlService<R: IUrlRepository> {
     url_repo: R,
+}
+
+impl<R: IUrlRepository> UrlService<R> {
+    pub fn new(url_repository: R) -> Self {
+        Self {
+            url_repo: url_repository,
+        }
+    }
 }
 
 impl<R: IUrlRepository> IUrlService for UrlService<R> {
@@ -68,12 +82,14 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
             Err(UrlError::NotFound(msg))
         }
     }
-}
 
-impl<R: IUrlRepository> UrlService<R> {
-    pub fn new(url_repository: R) -> Self {
-        Self {
-            url_repo: url_repository,
-        }
+    async fn update_url_by_short_code(
+        &self,
+        short_code: ShortCode,
+        valid_url: ValidUrl,
+    ) -> Result<Url, UrlError> {
+        let url = self.get_url_by_short_code(short_code).await?;
+
+        self.url_repo.update(&url, &valid_url).await
     }
 }

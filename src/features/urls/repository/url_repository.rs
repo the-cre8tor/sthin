@@ -94,7 +94,20 @@ impl IUrlRepository for UrlRepository {
         Ok(result.is_some())
     }
 
-    // async fn update(&self, url: &Url) -> Result<Url, DomainError> {
-    //     todo!()
-    // }
+    async fn update(&self, url: &Url, valid_url: &ValidUrl) -> Result<Url, UrlError> {
+        let result = sqlx::query_as!(
+            UrlEntity,
+            r#"
+            UPDATE urls SET original_url = $1
+            WHERE short_code = $2
+            RETURNING *
+            "#,
+            valid_url.as_str(),
+            url.short_code.as_str()
+        )
+        .fetch_one(&self.pool)
+        .await?;
+
+        result.to_domain()
+    }
 }

@@ -165,9 +165,9 @@ mod tests {
     fn test_tld_validation() {
         // Should fail with invalid TLD
         let result = ValidUrl::new("http://example.invalid".into());
-        let message = String::from_str("Invalid TLD: {}");
+        let _message = String::from_str("Invalid TLD: {}");
 
-        assert!(matches!(result, Err(UrlError::InvalidUrl(message))));
+        assert!(matches!(result, Err(UrlError::InvalidUrl(_message))));
 
         // Should pass with valid TLD
         let result = ValidUrl::new("http://example.com".into());
