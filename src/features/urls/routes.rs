@@ -6,7 +6,6 @@ use actix_web::{
     http::StatusCode,
     web::{JsonConfig, ServiceConfig, get, post, scope},
 };
-use serde_json::Value;
 
 pub struct Routes;
 
@@ -36,9 +35,6 @@ fn json_error_handler(error: JsonPayloadError, _req: &HttpRequest) -> Error {
         _ => "Invalid JSON payload",
     };
 
-    InternalError::from_response(
-        error,
-        ApiResponse::<Value>::fail(Value::String(error_message.into()), StatusCode::BAD_REQUEST),
-    )
-    .into()
+    let response = ApiResponse::<&str>::fail(error_message.into(), StatusCode::BAD_REQUEST);
+    InternalError::from_response(error, response).into()
 }
