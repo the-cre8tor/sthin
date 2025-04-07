@@ -12,7 +12,7 @@ use crate::features::urls::routes::Routes;
 use crate::features::urls::service::UrlService;
 
 pub struct WebServer {
-    port: u16,
+    _port: u16,
     server: Server,
 }
 
@@ -27,7 +27,10 @@ impl WebServer {
 
         let server = Self::run(listener, connection_pool).await?;
 
-        Ok(Self { server, port })
+        Ok(Self {
+            _port: port,
+            server,
+        })
     }
 
     async fn run(listener: TcpListener, pool: PgPool) -> Result<Server, anyhow::Error> {
