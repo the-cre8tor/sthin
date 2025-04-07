@@ -1,14 +1,14 @@
 use sqlx::PgPool;
 use uuid::Uuid;
 
-use crate::features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError};
+use crate::features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStats};
 
 pub trait IUrlStatsRepository {
     fn save(
         &self,
         url_id: Uuid,
         access_count: i32,
-    ) -> impl Future<Output = Result<UrlStatsEntity, UrlStatsError>> + Send;
+    ) -> impl Future<Output = Result<UrlStats, UrlStatsError>> + Send;
 }
 
 pub struct UrlStatsRepository {
@@ -22,7 +22,7 @@ impl UrlStatsRepository {
 }
 
 impl IUrlStatsRepository for UrlStatsRepository {
-    async fn save(&self, url_id: Uuid, access_count: i32) -> Result<UrlStatsEntity, UrlStatsError> {
+    async fn save(&self, url_id: Uuid, access_count: i32) -> Result<UrlStats, UrlStatsError> {
         let response = sqlx::query_as!(
             UrlStatsEntity,
             r#"
@@ -44,6 +44,6 @@ impl IUrlStatsRepository for UrlStatsRepository {
         .fetch_one(&self.client)
         .await?;
 
-        Ok(response)
+        response.to_domain()
     }
 }
