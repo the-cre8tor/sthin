@@ -17,8 +17,8 @@ pub trait IUrlRepository: Send + Sync {
     ) -> impl Future<Output = Result<Option<Url>, UrlError>> + Send;
     fn update(
         &self,
-        url: &Url,
-        valid_url: &ValidUrl,
+        url: &mut Url,
+        valid_url: ValidUrl,
     ) -> impl Future<Output = Result<Url, UrlError>> + Send;
     fn delete_by_short_code(
         &self,

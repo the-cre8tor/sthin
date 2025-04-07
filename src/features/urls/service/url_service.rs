@@ -93,9 +93,9 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
         short_code: ShortCode,
         valid_url: ValidUrl,
     ) -> Result<Url, UrlError> {
-        let url = self.get_url_by_short_code(short_code).await?;
+        let mut url = self.get_url_by_short_code(short_code).await?;
 
-        self.url_repo.update(&url, &valid_url).await
+        self.url_repo.update(&mut url, valid_url).await
     }
 
     async fn delete_url_by_short_code(&self, short_code: &ShortCode) -> Result<bool, UrlError> {
