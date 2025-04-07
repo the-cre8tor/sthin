@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::features::{
     url_stats::{error::UrlStatsError, model::UrlStats, repository::IUrlStatsRepository},
     urls::models::Url,
@@ -12,7 +14,13 @@ pub trait IUrlStatsService: Send + Sync {
 
 #[derive(Clone)]
 pub struct UrlStatsService<T> {
-    repository: T,
+    repository: Arc<T>,
+}
+
+impl<T: IUrlStatsRepository> UrlStatsService<T> {
+    pub fn new(repository: Arc<T>) -> Self {
+        Self { repository }
+    }
 }
 
 impl<T: IUrlStatsRepository> IUrlStatsService for UrlStatsService<T> {

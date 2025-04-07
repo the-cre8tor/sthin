@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use crate::features::urls::errors::UrlError;
 use crate::features::urls::models::Url;
 use crate::features::urls::repository::IUrlRepository;
@@ -29,11 +31,11 @@ pub trait IUrlService: Send + Sync {
 
 #[derive(Clone)]
 pub struct UrlService<R: IUrlRepository> {
-    url_repo: R,
+    url_repo: Arc<R>,
 }
 
 impl<R: IUrlRepository> UrlService<R> {
-    pub fn new(url_repository: R) -> Self {
+    pub fn new(url_repository: Arc<R>) -> Self {
         Self {
             url_repo: url_repository,
         }

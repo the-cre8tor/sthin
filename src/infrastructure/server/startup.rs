@@ -3,13 +3,22 @@ use actix_web::web::{Data, get};
 use actix_web::{App, HttpServer};
 use sqlx::PgPool;
 use std::net::TcpListener;
+use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::Settings;
+use crate::features::url_stats::repository::UrlStatsRepository;
+use crate::features::url_stats::service::UrlStatsService;
 use crate::features::urls::handlers::health_check;
 use crate::features::urls::repository::UrlRepository;
 use crate::features::urls::routes::Routes;
 use crate::features::urls::service::UrlService;
+
+#[derive(Clone)]
+pub struct AppServices {
+    pub url_service: Arc<UrlService<UrlRepository>>,
+    pub url_stats_service: Arc<UrlStatsService<UrlStatsRepository>>,
+}
 
 pub struct WebServer {
     _port: u16,
@@ -34,15 +43,26 @@ impl WebServer {
     }
 
     async fn run(listener: TcpListener, pool: PgPool) -> Result<Server, anyhow::Error> {
-        let url_repository = UrlRepository::new(pool);
-        let url_service = Data::new(UrlService::new(url_repository));
+        // Create repositories
+        let url_repository = Arc::new(UrlRepository::new(pool.clone()));
+        let url_stats_repository = Arc::new(UrlStatsRepository::new(pool.clone()));
+
+        // Create services
+        let url_service = Arc::new(UrlService::new(url_repository));
+        let url_stats_service = Arc::new(UrlStatsService::new(url_stats_repository));
+
+        // App State
+        let services = AppServices {
+            url_service,
+            url_stats_service,
+        };
 
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(TracingLogger::default())
                 .route("healthz", get().to(health_check))
                 .configure(Routes::configure_routes)
-                .app_data(url_service.clone())
+                .app_data(Data::new(services.clone()))
         })
         .listen(listener)?
         .run();
