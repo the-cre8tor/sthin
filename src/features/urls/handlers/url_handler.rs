@@ -1,6 +1,5 @@
 use actix_web::{
     HttpResponse,
-    http::StatusCode,
     web::{Data, Json, Path},
 };
 use serde_json::Value;
