@@ -20,6 +20,11 @@ pub trait IUrlService: Send + Sync {
         short_code: ShortCode,
         valid_url: ValidUrl,
     ) -> impl Future<Output = Result<Url, UrlError>> + Send;
+
+    fn delete_url_by_short_code(
+        &self,
+        url: &ShortCode,
+    ) -> impl Future<Output = Result<bool, UrlError>> + Send;
 }
 
 #[derive(Clone)]
@@ -91,5 +96,18 @@ impl<R: IUrlRepository> IUrlService for UrlService<R> {
         let url = self.get_url_by_short_code(short_code).await?;
 
         self.url_repo.update(&url, &valid_url).await
+    }
+
+    async fn delete_url_by_short_code(&self, short_code: &ShortCode) -> Result<bool, UrlError> {
+        let url = self.url_repo.find_by_short_code(short_code).await?;
+
+        if url.is_none() {
+            return Err(UrlError::NotFound(format!(
+                "URL with the associated shortcode: '{}' is not found!",
+                short_code.as_str()
+            )));
+        }
+
+        self.url_repo.delete_by_short_code(short_code).await
     }
 }

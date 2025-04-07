@@ -1,7 +1,9 @@
 use actix_web::{
     HttpResponse,
+    http::StatusCode,
     web::{Data, Json, Path},
 };
+use serde_json::Value;
 
 use crate::{
     error::AppError,
@@ -63,5 +65,16 @@ impl UrlHandler {
             .await?;
 
         Ok(ApiResponse::success(response))
+    }
+
+    pub async fn delete_url_by_short_code(
+        param: Path<String>,
+        url_service: Data<UrlService<UrlRepository>>,
+    ) -> Result<HttpResponse, AppError> {
+        let short_code = ShortCode::new(Some(param.into_inner()))?;
+
+        url_service.delete_url_by_short_code(&short_code).await?;
+
+        Ok(ApiResponse::<Value>::success_with_no_content())
     }
 }

@@ -4,7 +4,7 @@ use actix_web::{
     Error, HttpRequest,
     error::{InternalError, JsonPayloadError},
     http::StatusCode,
-    web::{JsonConfig, ServiceConfig, get, post, scope},
+    web::{JsonConfig, ServiceConfig, delete, get, post, scope},
 };
 
 pub struct Routes;
@@ -21,7 +21,8 @@ impl Routes {
                 scope("/shorten")
                     .route("", post().to(UrlHandler::create_short_url))
                     .route("/{code}", get().to(UrlHandler::retreive_url_by_short_code))
-                    .route("/{code}", post().to(UrlHandler::update_url_by_short_code)),
+                    .route("/{code}", post().to(UrlHandler::update_url_by_short_code))
+                    .route("/{code}", delete().to(UrlHandler::delete_url_by_short_code)),
             ),
         );
     }

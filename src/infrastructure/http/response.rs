@@ -15,6 +15,10 @@ impl<T: Serialize> ApiResponse<T> {
         HttpResponse::Ok().json(Self::Success { data })
     }
 
+    pub fn success_with_no_content() -> HttpResponse {
+        HttpResponse::NotFound().finish()
+    }
+
     pub fn fail(data: Value, status_code: StatusCode) -> HttpResponse {
         HttpResponse::build(status_code).json(Self::Fail { data })
     }
