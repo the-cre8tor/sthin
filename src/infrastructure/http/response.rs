@@ -16,7 +16,7 @@ impl<T: Serialize> ApiResponse<T> {
     }
 
     pub fn success_with_no_content() -> HttpResponse {
-        HttpResponse::NotFound().finish()
+        HttpResponse::NoContent().finish()
     }
 
     pub fn fail(data: Value, status_code: StatusCode) -> HttpResponse {

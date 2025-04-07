@@ -72,7 +72,7 @@ impl UrlHandler {
     ) -> Result<HttpResponse, AppError> {
         let short_code = ShortCode::new(Some(param.into_inner()))?;
 
-        url_service.delete_url_by_short_code(&short_code).await?;
+        let _ = url_service.delete_url_by_short_code(&short_code).await?;
 
         Ok(ApiResponse::<Value>::success_with_no_content())
     }
