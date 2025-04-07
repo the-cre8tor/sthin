@@ -3,7 +3,7 @@ use uuid::Uuid;
 
 use crate::features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStats};
 
-pub trait IUrlStatsRepository {
+pub trait IUrlStatsRepository: Send + Sync {
     fn save(
         &self,
         url_id: Uuid,
