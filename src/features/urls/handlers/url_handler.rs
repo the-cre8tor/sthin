@@ -8,8 +8,7 @@ use crate::{
     error::AppError,
     features::urls::{
         dtos::{CreateUrlDto, UpdateUrlDto},
-        repository::UrlRepository,
-        service::{IUrlService, UrlService},
+        service::IUrlService,
         value_objects::{ShortCode, ValidUrl},
     },
     infrastructure::{http::ApiResponse, server::AppServices},
@@ -20,19 +19,19 @@ pub struct UrlHandler;
 impl UrlHandler {
     pub async fn create_short_url(
         payload: Json<CreateUrlDto>,
-        state: Data<AppServices>,
+        service: Data<AppServices>,
     ) -> Result<HttpResponse, AppError> {
         let valid_url = ValidUrl::new(payload.0.url)?;
 
         let url = if let Some(custom_code) = payload.0.custom_code {
             let short_code = ShortCode::new(Some(custom_code))?;
 
-            state
+            service
                 .url_service
                 .create_short_url(valid_url, Some(short_code))
                 .await
         } else {
-            state.url_service.create_short_url(valid_url, None).await
+            service.url_service.create_short_url(valid_url, None).await
         };
 
         match url {
@@ -43,11 +42,14 @@ impl UrlHandler {
 
     pub async fn retreive_url_by_short_code(
         param: Path<String>,
-        state: Data<AppServices>,
+        service: Data<AppServices>,
     ) -> Result<HttpResponse, AppError> {
         let short_code = ShortCode::new(Some(param.into_inner()))?;
 
-        let result = state.url_service.get_url_by_short_code(short_code).await?;
+        let result = service
+            .url_service
+            .get_url_by_short_code(short_code)
+            .await?;
 
         Ok(ApiResponse::success(result))
     }
@@ -55,12 +57,12 @@ impl UrlHandler {
     pub async fn update_url_by_short_code(
         param: Path<String>,
         payload: Json<UpdateUrlDto>,
-        state: Data<AppServices>,
+        service: Data<AppServices>,
     ) -> Result<HttpResponse, AppError> {
         let short_code = ShortCode::new(Some(param.into_inner()))?;
         let valid_url = ValidUrl::new(payload.url.clone())?;
 
-        let response = state
+        let response = service
             .url_service
             .update_url_by_short_code(short_code, valid_url)
             .await?;
