@@ -21,8 +21,6 @@ impl UrlHandler {
         payload: Json<CreateUrlDto>,
         url_service: Data<UrlService<UrlRepository>>,
     ) -> Result<HttpResponse, AppError> {
-        // let _ = dto.validate()?;
-
         let valid_url = ValidUrl::new(payload.0.url)?;
 
         let url = if let Some(custom_code) = payload.0.custom_code {
