@@ -1,5 +1,5 @@
 use anyhow::Result;
-use sthin::configuration::*;
+use sthin::configuration::Configs;
 use sthin::infrastructure::cache::redis_cache::RedisCache;
 use sthin::infrastructure::database::connection::DatabasePool;
 use sthin::infrastructure::server::WebServer;
