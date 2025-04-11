@@ -7,6 +7,7 @@ use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
 
 use crate::configuration::Settings;
+use crate::features::url_stats::queue::StatsProcessor;
 use crate::features::url_stats::repository::UrlStatsRepository;
 use crate::features::url_stats::service::UrlStatsService;
 use crate::features::urls::handlers::health_check;
@@ -18,6 +19,11 @@ use crate::features::urls::service::UrlService;
 pub struct AppServices {
     pub url_service: Arc<UrlService<UrlRepository>>,
     pub url_stats_service: Arc<UrlStatsService<UrlStatsRepository>>,
+}
+
+#[derive(Clone)]
+pub struct QueueProcessor {
+    stats_processor: StatsProcessor,
 }
 
 pub struct WebServer {
@@ -51,11 +57,16 @@ impl WebServer {
         let url_service = Arc::new(UrlService::new(url_repository));
         let url_stats_service = Arc::new(UrlStatsService::new(url_stats_repository));
 
+        let stats_processor = StatsProcessor::new(100, url_stats_service.clone());
+
         // App State
         let services = AppServices {
             url_service,
             url_stats_service,
         };
+
+        // App Queue
+        let processors = QueueProcessor { stats_processor };
 
         let server = HttpServer::new(move || {
             App::new()
@@ -63,6 +74,7 @@ impl WebServer {
                 .route("healthz", get().to(health_check))
                 .configure(Routes::configure_routes)
                 .app_data(Data::new(services.clone()))
+                .app_data(Data::new(processors.clone()))
         })
         .listen(listener)?
         .run();
