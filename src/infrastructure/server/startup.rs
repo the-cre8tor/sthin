@@ -23,7 +23,7 @@ pub struct AppServices {
 
 #[derive(Clone)]
 pub struct QueueProcessor {
-    stats_processor: StatsProcessor,
+    pub stats_processor: StatsProcessor,
 }
 
 pub struct WebServer {
@@ -57,6 +57,7 @@ impl WebServer {
         let url_service = Arc::new(UrlService::new(url_repository));
         let url_stats_service = Arc::new(UrlStatsService::new(url_stats_repository));
 
+        // Task Queues
         let stats_processor = StatsProcessor::new(100, url_stats_service.clone());
 
         // App State

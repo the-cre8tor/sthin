@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use actix_web::{
     HttpResponse,
     web::{Data, Json, Path},
@@ -7,14 +9,17 @@ use serde_json::Value;
 use crate::{
     error::AppError,
     features::{
-        url_stats::service::IUrlStatsService,
+        url_stats::{queue::StatsEvent, service::IUrlStatsService},
         urls::{
             dtos::{CreateUrlDto, UpdateUrlDto},
             service::IUrlService,
             value_objects::{ShortCode, ValidUrl},
         },
     },
-    infrastructure::{http::ApiResponse, server::AppServices},
+    infrastructure::{
+        http::ApiResponse,
+        server::{AppServices, QueueProcessor},
+    },
 };
 
 pub struct UrlHandler;
@@ -54,6 +59,7 @@ impl UrlHandler {
     pub async fn retreive_url_by_short_code(
         param: Path<String>,
         service: Data<AppServices>,
+        queue: Data<QueueProcessor>,
     ) -> Result<HttpResponse, AppError> {
         let short_code = ShortCode::new(Some(param.into_inner()))?;
 
@@ -62,14 +68,14 @@ impl UrlHandler {
             .get_url_by_short_code(short_code)
             .await?;
 
-        let clone_result = result.clone();
+        let event = StatsEvent {
+            data: result.clone(),
+            timestamp: Instant::now(),
+        };
 
-        let _handler = tokio::spawn(async move {
-            let _ = service
-                .url_stats_service
-                .record_url_access(clone_result)
-                .await;
-        });
+        if let Err(error) = queue.stats_processor.sender.try_send(event) {
+            println!("Stats channel full: {}", error)
+        }
 
         Ok(ApiResponse::success(result))
     }

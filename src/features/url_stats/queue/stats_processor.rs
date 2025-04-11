@@ -9,13 +9,13 @@ use std::{sync::Arc, time::Instant};
 use tokio::sync::mpsc;
 
 pub struct StatsEvent {
-    data: Url,
-    timestamp: Instant,
+    pub data: Url,
+    pub timestamp: Instant,
 }
 
 #[derive(Clone)]
 pub struct StatsProcessor {
-    sender: mpsc::Sender<StatsEvent>,
+    pub sender: mpsc::Sender<StatsEvent>,
 }
 
 impl StatsProcessor {
