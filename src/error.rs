@@ -3,7 +3,7 @@ use serde_json::{Value, json};
 use thiserror::Error;
 use validator::ValidationErrors;
 
-use crate::infrastructure::http::ApiResponse;
+use crate::infrastructure::server::ApiResponse;
 
 #[derive(Debug, Error)]
 pub enum AppError {

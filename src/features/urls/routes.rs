@@ -1,5 +1,5 @@
 use super::handlers::UrlHandler;
-use crate::infrastructure::http::ApiResponse;
+use crate::infrastructure::server::ApiResponse;
 use actix_web::{
     Error, HttpRequest,
     error::{InternalError, JsonPayloadError},

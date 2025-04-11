@@ -9,17 +9,14 @@ use serde_json::Value;
 use crate::{
     error::AppError,
     features::{
-        url_stats::{queue::StatsEvent, service::IUrlStatsService},
+        url_stats::queue::StatsEvent,
         urls::{
             dtos::{CreateUrlDto, UpdateUrlDto},
             service::IUrlService,
             value_objects::{ShortCode, ValidUrl},
         },
     },
-    infrastructure::{
-        http::ApiResponse,
-        server::{AppServices, QueueProcessor},
-    },
+    infrastructure::server::{ApiResponse, AppServices, QueueProcessor},
 };
 
 pub struct UrlHandler;
