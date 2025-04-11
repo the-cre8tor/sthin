@@ -6,10 +6,13 @@ use serde_json::Value;
 
 use crate::{
     error::AppError,
-    features::urls::{
-        dtos::{CreateUrlDto, UpdateUrlDto},
-        service::IUrlService,
-        value_objects::{ShortCode, ValidUrl},
+    features::{
+        url_stats::service::IUrlStatsService,
+        urls::{
+            dtos::{CreateUrlDto, UpdateUrlDto},
+            service::IUrlService,
+            value_objects::{ShortCode, ValidUrl},
+        },
     },
     infrastructure::{http::ApiResponse, server::AppServices},
 };
@@ -40,6 +43,14 @@ impl UrlHandler {
         }
     }
 
+    /// Retrieves the original URL associated with a short code.
+    ///
+    /// # Arguments
+    /// * `param` - Short code from the URL path
+    /// * `service` - Application services container
+    ///
+    /// # Returns
+    /// The original URL wrapped in a success response
     pub async fn retreive_url_by_short_code(
         param: Path<String>,
         service: Data<AppServices>,
@@ -50,6 +61,15 @@ impl UrlHandler {
             .url_service
             .get_url_by_short_code(short_code)
             .await?;
+
+        let clone_result = result.clone();
+
+        let _handler = tokio::spawn(async move {
+            let _ = service
+                .url_stats_service
+                .record_url_access(clone_result)
+                .await;
+        });
 
         Ok(ApiResponse::success(result))
     }

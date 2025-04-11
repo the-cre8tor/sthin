@@ -10,7 +10,7 @@ lazy_static! {
     ];
 }
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct ValidUrl(String);
 
 impl ValidUrl {

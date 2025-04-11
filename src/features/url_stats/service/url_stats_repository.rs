@@ -25,7 +25,10 @@ impl<T: IUrlStatsRepository> UrlStatsService<T> {
 
 impl<T: IUrlStatsRepository> IUrlStatsService for UrlStatsService<T> {
     async fn record_url_access(&self, url: Url) -> Result<UrlStats, UrlStatsError> {
-        let url = url.id.unwrap();
-        self.repository.save(url, 1).await
+        let url_id = url.id.unwrap();
+        let mut access_count = self.repository.find_one(url_id).await?;
+        access_count = access_count + 1;
+
+        self.repository.save(url_id, access_count).await
     }
 }

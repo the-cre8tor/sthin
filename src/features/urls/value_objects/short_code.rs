@@ -3,7 +3,7 @@ use rand::Rng;
 
 use crate::features::urls::errors::UrlError;
 
-#[derive(serde::Serialize, serde::Deserialize, Debug)]
+#[derive(serde::Serialize, serde::Deserialize, Debug, Clone)]
 pub struct ShortCode(String);
 
 impl ShortCode {

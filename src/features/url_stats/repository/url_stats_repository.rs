@@ -9,6 +9,8 @@ pub trait IUrlStatsRepository: Send + Sync {
         url_id: Uuid,
         access_count: i32,
     ) -> impl Future<Output = Result<UrlStats, UrlStatsError>> + Send;
+
+    fn find_one(&self, url_id: Uuid) -> impl Future<Output = Result<i32, UrlStatsError>> + Send;
 }
 
 pub struct UrlStatsRepository {
@@ -45,5 +47,20 @@ impl IUrlStatsRepository for UrlStatsRepository {
         .await?;
 
         response.to_domain()
+    }
+
+    async fn find_one(&self, url_id: Uuid) -> Result<i32, UrlStatsError> {
+        let response = sqlx::query!(
+            "SELECT access_count FROM url_stats WHERE url_id = $1",
+            url_id
+        )
+        .fetch_optional(&self.client)
+        .await?;
+
+        if let Some(record) = response {
+            return Ok(record.access_count);
+        }
+
+        Ok(0)
     }
 }
