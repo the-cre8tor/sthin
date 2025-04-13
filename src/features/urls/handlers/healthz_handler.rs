@@ -1,12 +1,12 @@
-use actix_web::{Responder, Result, web::Json};
+use axum::{Json, response::IntoResponse};
 
 #[derive(serde::Serialize)]
 struct HealthCheck {
     status: String,
 }
 
-pub async fn health_check() -> Result<impl Responder> {
-    Ok(Json(HealthCheck {
+pub async fn health_check() -> impl IntoResponse {
+    Json(HealthCheck {
         status: "Up and running".to_string(),
-    }))
+    })
 }

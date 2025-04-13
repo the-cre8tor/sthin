@@ -1,10 +1,8 @@
-use actix_web::dev::Server;
-use actix_web::web::{Data, get};
-use actix_web::{App, HttpServer};
+use axum::{Router, routing::get};
 use sqlx::PgPool;
-use std::net::TcpListener;
 use std::sync::Arc;
-use tracing_actix_web::TracingLogger;
+use tokio::net::TcpListener;
+use tower_http::trace::TraceLayer;
 
 use crate::configuration::Settings;
 use crate::features::url_stats::queue::StatsProcessor;
@@ -26,9 +24,15 @@ pub struct QueueProcessor {
     pub stats_processor: StatsProcessor,
 }
 
+#[derive(Clone)]
+pub struct AppState {
+    pub processors: QueueProcessor,
+    pub services: AppServices,
+}
+
 pub struct WebServer {
     _port: u16,
-    server: Server,
+    // listener: TcpListener,
 }
 
 impl WebServer {
@@ -37,18 +41,18 @@ impl WebServer {
         connection_pool: PgPool,
     ) -> Result<WebServer, anyhow::Error> {
         let address = format!("{}:{}", config.application.host, config.application.port);
-        let listener = TcpListener::bind(address)?;
-        let port = listener.local_addr().unwrap().port();
+        let listener = TcpListener::bind(address).await?;
+        let port = listener.local_addr()?.port();
 
-        let server = Self::run(listener, connection_pool).await?;
+        let _ = Self::run(listener, connection_pool).await?;
 
         Ok(Self {
             _port: port,
-            server,
+            // listener,
         })
     }
 
-    async fn run(listener: TcpListener, pool: PgPool) -> Result<Server, anyhow::Error> {
+    async fn run(listener: TcpListener, pool: PgPool) -> Result<(), anyhow::Error> {
         // Create repositories
         let url_repository = Arc::new(UrlRepository::new(pool.clone()));
         let url_stats_repository = Arc::new(UrlStatsRepository::new(pool.clone()));
@@ -69,21 +73,19 @@ impl WebServer {
         // App Queue
         let processors = QueueProcessor { stats_processor };
 
-        let server = HttpServer::new(move || {
-            App::new()
-                .wrap(TracingLogger::default())
-                .route("healthz", get().to(health_check))
-                .configure(Routes::configure_routes)
-                .app_data(Data::new(services.clone()))
-                .app_data(Data::new(processors.clone()))
-        })
-        .listen(listener)?
-        .run();
+        let state = Arc::new(AppState {
+            processors,
+            services,
+        });
 
-        Ok(server)
-    }
+        let app = Router::new()
+            .route("/healthz", get(health_check))
+            .merge(Routes::configure_routes())
+            .with_state(state)
+            .layer(TraceLayer::new_for_http());
 
-    pub async fn run_until_stopped(self) -> Result<(), std::io::Error> {
-        self.server.await
+        axum::serve(listener, app).await?;
+
+        Ok(())
     }
 }

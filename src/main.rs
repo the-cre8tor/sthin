@@ -14,8 +14,8 @@ async fn main() -> Result<()> {
     let pool = DatabasePool::new(&config.database).await?;
     let _redis = RedisCache::new(&config.redis.uri);
 
-    let server = WebServer::build(config, pool).await?;
-    server.run_until_stopped().await?;
+    let _ = WebServer::build(config, pool).await?;
+    // server.run_until_stopped().await?;
 
     Ok(())
 }

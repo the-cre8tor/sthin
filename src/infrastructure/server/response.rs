@@ -1,4 +1,8 @@
-use actix_web::{HttpResponse, http::StatusCode};
+use axum::{
+    Json,
+    response::{IntoResponse, Response},
+};
+use hyper::StatusCode;
 use serde::Serialize;
 use serde_json::Value;
 
@@ -11,21 +15,25 @@ pub enum ApiResponse<T> {
 }
 
 impl<T: Serialize> ApiResponse<T> {
-    pub fn success(data: T) -> HttpResponse {
-        HttpResponse::Ok().json(Self::Success { data })
+    pub fn success(data: T) -> Response {
+        (StatusCode::OK, Json(Self::Success { data })).into_response()
     }
 
-    pub fn success_with_no_content() -> HttpResponse {
-        HttpResponse::NoContent().finish()
+    pub fn success_with_no_content() -> Response {
+        StatusCode::NO_CONTENT.into_response()
     }
 
-    pub fn fail(data: Value, status_code: StatusCode) -> HttpResponse {
-        HttpResponse::build(status_code).json(Self::Fail { data })
+    pub fn fail(data: Value, status_code: StatusCode) -> Response {
+        (status_code, Json(Self::Fail { data })).into_response()
     }
 
-    pub fn error(message: impl Into<String>) -> HttpResponse {
-        HttpResponse::InternalServerError().json(Self::Error {
-            message: message.into(),
-        })
+    pub fn error(message: impl Into<String>) -> Response {
+        (
+            StatusCode::INTERNAL_SERVER_ERROR,
+            Json(Self::Error {
+                message: message.into(),
+            }),
+        )
+            .into_response()
     }
 }

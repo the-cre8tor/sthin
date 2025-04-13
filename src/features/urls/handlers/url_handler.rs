@@ -1,11 +1,3 @@
-use std::time::Instant;
-
-use actix_web::{
-    HttpResponse,
-    web::{Data, Json, Path},
-};
-use serde_json::Value;
-
 use crate::{
     error::AppError,
     features::{
@@ -16,19 +8,28 @@ use crate::{
             value_objects::{ShortCode, ValidUrl},
         },
     },
-    infrastructure::server::{ApiResponse, AppServices, QueueProcessor},
+    infrastructure::server::{ApiResponse, AppState},
 };
+use axum::{
+    Json,
+    extract::{Path, State},
+    response::Response,
+};
+use serde_json::Value;
+use std::{sync::Arc, time::Instant};
 
 pub struct UrlHandler;
 
 impl UrlHandler {
     pub async fn create_short_url(
-        payload: Json<CreateUrlDto>,
-        service: Data<AppServices>,
-    ) -> Result<HttpResponse, AppError> {
-        let valid_url = ValidUrl::new(payload.0.url)?;
+        State(state): State<Arc<AppState>>,
+        Json(payload): Json<CreateUrlDto>,
+    ) -> Result<Response, AppError> {
+        let valid_url = ValidUrl::new(payload.url)?;
 
-        let url = if let Some(custom_code) = payload.0.custom_code {
+        let service = &state.services;
+
+        let url = if let Some(custom_code) = payload.custom_code {
             let short_code = ShortCode::new(Some(custom_code))?;
 
             service
@@ -45,20 +46,14 @@ impl UrlHandler {
         }
     }
 
-    /// Retrieves the original URL associated with a short code.
-    ///
-    /// # Arguments
-    /// * `param` - Short code from the URL path
-    /// * `service` - Application services container
-    ///
-    /// # Returns
-    /// The original URL wrapped in a success response
     pub async fn retreive_url_by_short_code(
-        param: Path<String>,
-        service: Data<AppServices>,
-        queue: Data<QueueProcessor>,
-    ) -> Result<HttpResponse, AppError> {
-        let short_code = ShortCode::new(Some(param.into_inner()))?;
+        Path(param): Path<String>,
+        State(state): State<Arc<AppState>>,
+    ) -> Result<Response, AppError> {
+        let short_code = ShortCode::new(Some(param))?;
+
+        let service = &state.services;
+        let queue = &state.processors;
 
         let result = service
             .url_service
@@ -78,12 +73,14 @@ impl UrlHandler {
     }
 
     pub async fn update_url_by_short_code(
-        param: Path<String>,
-        payload: Json<UpdateUrlDto>,
-        service: Data<AppServices>,
-    ) -> Result<HttpResponse, AppError> {
-        let short_code = ShortCode::new(Some(param.into_inner()))?;
+        Path(param): Path<String>,
+        State(state): State<Arc<AppState>>, // state must come second else it will be panic
+        Json(payload): Json<UpdateUrlDto>,
+    ) -> Result<Response, AppError> {
+        let short_code = ShortCode::new(Some(param))?;
         let valid_url = ValidUrl::new(payload.url.clone())?;
+
+        let service = &state.services;
 
         let response = service
             .url_service
@@ -94,10 +91,12 @@ impl UrlHandler {
     }
 
     pub async fn delete_url_by_short_code(
-        param: Path<String>,
-        service: Data<AppServices>,
-    ) -> Result<HttpResponse, AppError> {
-        let short_code = ShortCode::new(Some(param.into_inner()))?;
+        Path(param): Path<String>,
+        State(state): State<Arc<AppState>>,
+    ) -> Result<Response, AppError> {
+        let short_code = ShortCode::new(Some(param))?;
+
+        let service = &state.services;
 
         let _ = service
             .url_service
