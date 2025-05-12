@@ -1,7 +1,10 @@
-use sqlx::PgPool;
+use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStats};
+use crate::{
+    features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStats},
+    infrastructure::database::connection::DatabasePool,
+};
 
 pub trait IUrlStatsRepository: Send + Sync {
     fn save(
@@ -14,12 +17,12 @@ pub trait IUrlStatsRepository: Send + Sync {
 }
 
 pub struct UrlStatsRepository {
-    client: PgPool,
+    database: Arc<DatabasePool>,
 }
 
 impl UrlStatsRepository {
-    pub fn new(pool: PgPool) -> Self {
-        Self { client: pool }
+    pub fn new(database: Arc<DatabasePool>) -> Self {
+        Self { database }
     }
 }
 
@@ -43,7 +46,7 @@ impl IUrlStatsRepository for UrlStatsRepository {
             url_id,
             access_count
         )
-        .fetch_one(&self.client)
+        .fetch_one(&self.database.pool)
         .await?;
 
         response.to_domain()
@@ -54,7 +57,7 @@ impl IUrlStatsRepository for UrlStatsRepository {
             "SELECT access_count FROM url_stats WHERE url_id = $1",
             url_id
         )
-        .fetch_optional(&self.client)
+        .fetch_optional(&self.database.pool)
         .await?;
 
         if let Some(record) = response {

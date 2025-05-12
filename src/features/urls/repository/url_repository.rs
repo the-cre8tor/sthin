@@ -1,11 +1,14 @@
-use sqlx::PgPool;
+use std::sync::Arc;
 use uuid::Uuid;
 
-use crate::features::urls::{
-    entities::UrlEntity,
-    errors::UrlError,
-    models::Url,
-    value_objects::{ShortCode, ValidUrl},
+use crate::{
+    features::urls::{
+        entities::UrlEntity,
+        errors::UrlError,
+        models::Url,
+        value_objects::{ShortCode, ValidUrl},
+    },
+    infrastructure::database::connection::DatabasePool,
 };
 
 pub trait IUrlRepository: Send + Sync {
@@ -35,12 +38,12 @@ pub trait IUrlRepository: Send + Sync {
 }
 
 pub struct UrlRepository {
-    pool: PgPool,
+    database: Arc<DatabasePool>,
 }
 
 impl UrlRepository {
-    pub fn new(pool: PgPool) -> Self {
-        Self { pool }
+    pub fn new(database: Arc<DatabasePool>) -> Self {
+        Self { database }
     }
 }
 
@@ -63,7 +66,7 @@ impl IUrlRepository for UrlRepository {
             db_url.created_at,
             db_url.updated_at
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&self.database.pool)
         .await?;
 
         saved_url.to_domain()
@@ -71,7 +74,7 @@ impl IUrlRepository for UrlRepository {
 
     async fn find_by_id(&self, id: Uuid) -> Result<Option<Uuid>, UrlError> {
         let result = sqlx::query!("SELECT id FROM urls WHERE id = $1", id)
-            .fetch_optional(&self.pool)
+            .fetch_optional(&self.database.pool)
             .await?;
 
         Ok(result.map(|row| row.id))
@@ -83,7 +86,7 @@ impl IUrlRepository for UrlRepository {
             "SELECT * FROM urls WHERE short_code = $1",
             short_code.as_str()
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&self.database.pool)
         .await?;
 
         result.map(|db_url| db_url.to_domain()).transpose()
@@ -95,7 +98,7 @@ impl IUrlRepository for UrlRepository {
             "SELECT * FROM urls WHERE original_url = $1",
             original_url.as_ref()
         )
-        .fetch_optional(&self.pool)
+        .fetch_optional(&self.database.pool)
         .await?;
 
         result.map(|db_url| db_url.to_domain()).transpose()
@@ -106,7 +109,7 @@ impl IUrlRepository for UrlRepository {
             "DELETE FROM urls WHERE short_code = $1",
             short_code.as_str()
         )
-        .execute(&self.pool)
+        .execute(&self.database.pool)
         .await?;
 
         Ok(result.rows_affected() > 0)
@@ -132,7 +135,7 @@ impl IUrlRepository for UrlRepository {
             url.short_code.as_str(),
             url.updated_at
         )
-        .fetch_one(&self.pool)
+        .fetch_one(&self.database.pool)
         .await?;
 
         result.to_domain()

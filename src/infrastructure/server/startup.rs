@@ -1,7 +1,6 @@
 use actix_web::dev::Server;
 use actix_web::web::{Data, get};
 use actix_web::{App, HttpServer};
-use sqlx::PgPool;
 use std::net::TcpListener;
 use std::sync::Arc;
 use tracing_actix_web::TracingLogger;
@@ -14,6 +13,7 @@ use crate::features::urls::handlers::health_check;
 use crate::features::urls::repository::UrlRepository;
 use crate::features::urls::routes::Routes;
 use crate::features::urls::service::UrlService;
+use crate::infrastructure::database::connection::DatabasePool;
 
 #[derive(Clone)]
 pub struct AppServices {
@@ -34,13 +34,13 @@ pub struct WebServer {
 impl WebServer {
     pub async fn build(
         config: Settings,
-        connection_pool: PgPool,
+        database_pool: DatabasePool,
     ) -> Result<WebServer, anyhow::Error> {
         let address = format!("{}:{}", config.application.host, config.application.port);
         let listener = TcpListener::bind(address)?;
         let port = listener.local_addr().unwrap().port();
 
-        let server = Self::run(listener, connection_pool).await?;
+        let server = Self::run(listener, database_pool).await?;
 
         Ok(Self {
             _port: port,
@@ -48,10 +48,14 @@ impl WebServer {
         })
     }
 
-    async fn run(listener: TcpListener, pool: PgPool) -> Result<Server, anyhow::Error> {
+    async fn run(
+        listener: TcpListener,
+        database_pool: DatabasePool,
+    ) -> Result<Server, anyhow::Error> {
         // Create repositories
-        let url_repository = Arc::new(UrlRepository::new(pool.clone()));
-        let url_stats_repository = Arc::new(UrlStatsRepository::new(pool.clone()));
+        let db_connection = Arc::new(database_pool);
+        let url_repository = Arc::new(UrlRepository::new(db_connection.clone()));
+        let url_stats_repository = Arc::new(UrlStatsRepository::new(db_connection.clone()));
 
         // Create services
         let url_service = Arc::new(UrlService::new(url_repository));
