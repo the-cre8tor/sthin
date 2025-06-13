@@ -3,6 +3,7 @@ use redis::{AsyncCommands, Client, ConnectionLike};
 use serde::{Serialize, de::DeserializeOwned};
 use std::time::Duration;
 
+#[derive(Debug)]
 pub struct RedisCache {
     client: Client,
 }
@@ -17,6 +18,11 @@ impl RedisCache {
         let mut client = Client::open(redis_url)?;
 
         let is_redis_connected = client.check_connection();
+
+        if !is_redis_connected {
+            tracing::error!("{}", CacheError::RedisConnectionError);
+            return Err(CacheError::RedisConnectionError);
+        }
 
         tracing::Span::current().record(
             "is_redis_connected",
