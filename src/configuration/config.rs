@@ -42,10 +42,10 @@ impl Configs {
         let base_path = std::env::current_dir().expect("Failed to determine the current directory");
         let config_dir = base_path.join("configs");
 
-        let env: Env = std::env::var("APP_ENV")
+        let env: Env = std::env::var("APP_ENVIRONMENT")
             .unwrap_or_else(|_| "local".into())
             .try_into()
-            .expect("Failed to parse APP_ENV");
+            .expect("Failed to parse APP_ENVIRONMENT");
 
         let env_filename = format!("{}.yaml", env.as_str());
 
