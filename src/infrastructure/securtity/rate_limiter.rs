@@ -25,7 +25,7 @@ impl RateLimiter {
     pub fn allow_request(&self, client_id: String, limit: usize, window: Duration) -> bool {
         let mut states = self.states.lock().unwrap();
 
-        let state = states.entry(client_id.clone()).or_insert(RateLimiterState {
+        let state = states.entry(client_id).or_insert(RateLimiterState {
             requests: Vec::new(),
             limit,
             window,

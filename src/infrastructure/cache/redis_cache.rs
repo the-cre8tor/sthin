@@ -58,16 +58,4 @@ impl RedisCache {
 
         deserialized.transpose()
     }
-
-    // pub async fn cache_url(&self, short_code: &str, url: &Url) -> Result<(), CacheError> {
-    //     let key = format!("url:{}", short_code);
-    //     let duration = Some(Duration::from_secs(3600)); // an hour
-
-    //     self.set(&key, url, duration).await
-    // }
-
-    // pub async fn get_cached_url(&self, short_code: &str) -> Result<Option<Url>, CacheError> {
-    //     let key = format!("url:{}", short_code);
-    //     self.get(&key).await
-    // }
 }
