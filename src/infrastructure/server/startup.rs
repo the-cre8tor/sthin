@@ -11,9 +11,10 @@ use crate::features::url_stats::repository::UrlStatsRepository;
 use crate::features::url_stats::service::UrlStatsService;
 use crate::features::urls::handlers::health_check;
 use crate::features::urls::repository::UrlRepository;
-use crate::features::urls::routes::Routes;
 use crate::features::urls::service::UrlService;
 use crate::infrastructure::database::connection::DatabasePool;
+
+use super::routes::Routes;
 
 #[derive(Clone)]
 pub struct AppServices {
