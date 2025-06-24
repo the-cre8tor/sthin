@@ -5,6 +5,7 @@ use actix_web::{
     web::{Data, Json, Path},
 };
 use serde_json::Value;
+use validator::Validate;
 
 use crate::{
     error::AppError,
@@ -26,6 +27,8 @@ impl UrlHandler {
         payload: Json<CreateUrlDto>,
         service: Data<AppServices>,
     ) -> Result<HttpResponse, AppError> {
+        payload.validate()?;
+
         let valid_url = ValidUrl::new(payload.0.url)?;
 
         let url = if let Some(custom_code) = payload.0.custom_code {

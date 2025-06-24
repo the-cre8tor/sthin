@@ -4,7 +4,7 @@ use actix_web::{
     Error, HttpRequest,
     error::{InternalError, JsonPayloadError},
     http::StatusCode,
-    web::{self, JsonConfig, ServiceConfig, delete, get, post, scope},
+    web::{self, JsonConfig, ServiceConfig, delete, get, patch, post, scope},
 };
 use serde_json::{Value, json};
 
@@ -22,7 +22,7 @@ impl Routes {
                 scope("/shorten")
                     .route("", post().to(UrlHandler::create_short_url))
                     .route("/{code}", get().to(UrlHandler::retreive_url_by_short_code))
-                    .route("/{code}", post().to(UrlHandler::update_url_by_short_code))
+                    .route("/{code}", patch().to(UrlHandler::update_url_by_short_code))
                     .route("/{code}", delete().to(UrlHandler::delete_url_by_short_code)),
             ),
         )
