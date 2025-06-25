@@ -132,7 +132,6 @@ cargo test
 - 📝 [tracing](https://crates.io/crates/tracing) — Structured logging
 - 🔄 [serde](https://crates.io/crates/serde) — Serialization
 - 🛑 [thiserror](https://crates.io/crates/thiserror), [anyhow](https://crates.io/crates/anyhow) — Error handling
-- ✅ [validator](https://crates.io/crates/validator) — Input validation
 
 ---
 

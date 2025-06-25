@@ -1,7 +1,6 @@
 use actix_web::{HttpResponse, ResponseError, http::StatusCode};
 use serde_json::{Value, json};
 use thiserror::Error;
-use validator::ValidationErrors;
 
 use crate::infrastructure::server::ApiResponse;
 
@@ -9,9 +8,6 @@ use crate::infrastructure::server::ApiResponse;
 pub enum AppError {
     #[error("Validation failed")]
     Validation(String),
-
-    #[error("DTO validation error")]
-    RawValidator(#[from] ValidationErrors),
 
     #[error("Not found: {0}")]
     NotFound(String),
