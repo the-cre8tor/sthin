@@ -88,7 +88,7 @@ Or use the provided scripts in [`init-scripts/`](init-scripts/).
 #### With Cargo
 
 ```sh
-cargo run --bin sthin-runner
+cargo watch -x run
 ```
 
 #### With Docker Compose
@@ -101,10 +101,12 @@ docker-compose up --build
 
 ## 📚 API Endpoints
 
+- `GET   /healthz` — Check application health
 - `POST   /api/shorten` — Create a new short URL
 - `GET    /api/shorten/{code}` — Retrieve original URL by short code
 - `PATCH  /api/shorten/{code}` — Update a shortened URL
 - `DELETE /api/shorten/{code}` — Delete a shortened URL
+- `GET    /api/stats/{code}` — Retrieve statistics for a shortened URL
 
 See [`src/infrastructure/server/routes.rs`](src/infrastructure/server/routes.rs) for details.
 
