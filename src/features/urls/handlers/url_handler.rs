@@ -55,7 +55,7 @@ impl UrlHandler {
     /// * `service` - Application services container
     ///
     /// # Returns
-    /// The original URL wrapped in a success response
+    /// Redirect to the original short code URL
     pub async fn retreive_url_by_short_code(
         param: Path<String>,
         service: Data<AppServices>,
@@ -74,10 +74,10 @@ impl UrlHandler {
         };
 
         if let Err(error) = queue.stats_processor.sender.try_send(event) {
-            println!("Stats channel full: {}", error)
+            println!("Stats channel full: {}", error) // replace this with trace
         }
 
-        Ok(ApiResponse::success(result))
+        Ok(ApiResponse::<&str>::redirect(result.original_url.as_str()))
     }
 
     pub async fn update_url_by_short_code(
