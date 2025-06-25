@@ -151,4 +151,6 @@ This project is licensed under the MIT License.
 
 ---
 
-\*Made with ❤️ and Rust. Project Detail by: [Roadmap.sh](https://roadmap.sh/projects/url-shortening-service)
+\*Made with ❤️ and Rust.
+
+ <!-- Project Detail by: [Roadmap.sh](https://roadmap.sh/projects/url-shortening-service) -->
