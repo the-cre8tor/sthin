@@ -80,6 +80,13 @@ impl UrlHandler {
         Ok(ApiResponse::<&str>::redirect(result.original_url.as_str()))
     }
 
+    pub async fn fetch_short_code_stats(
+        param: Path<String>,
+        service: Data<AppServices>,
+    ) -> Result<HttpResponse, AppError> {
+        Ok(ApiResponse::success({}))
+    }
+
     pub async fn update_url_by_short_code(
         param: Path<String>,
         payload: Json<UpdateUrlDto>,

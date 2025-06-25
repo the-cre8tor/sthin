@@ -22,6 +22,10 @@ impl Routes {
                 scope("/shorten")
                     .route("", post().to(UrlHandler::create_short_url))
                     .route("/{code}", get().to(UrlHandler::retreive_url_by_short_code))
+                    .route(
+                        "/{code}/stats",
+                        get().to(UrlHandler::fetch_short_code_stats),
+                    )
                     .route("/{code}", patch().to(UrlHandler::update_url_by_short_code))
                     .route("/{code}", delete().to(UrlHandler::delete_url_by_short_code)),
             ),
