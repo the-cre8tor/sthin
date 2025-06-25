@@ -49,7 +49,7 @@ A high-performance, async URL shortening service built with Rust, Actix-web, SQL
 
 ### ⚙️ Configuration
 
-Configuration is managed via YAML files in [`configs/`](configs/):
+Configuration is managed via YAML files in [`./configs/`](configs/):
 
 - `base.yaml`: Default settings
 - `local.yaml`: Local development overrides
@@ -75,7 +75,7 @@ sqlx database setup
 sqlx migrate run
 ```
 
-Or use the provided scripts in [`init-scripts/`](init-scripts/).
+Or use the provided scripts in [`./init-scripts/`](init-scripts/).
 
 ### ▶️ Running the Application
 
@@ -98,9 +98,9 @@ docker-compose up --build
 - `GET   /healthz` — Check application health
 - `POST   /api/shorten` — Create a new short URL
 - `GET    /api/shorten/{code}` — Retrieve original URL by short code
+- `GET    /api/shorten/{code}/stats` — Retrieve statistics for a shortened URL
 - `PATCH  /api/shorten/{code}` — Update a shortened URL
 - `DELETE /api/shorten/{code}` — Delete a shortened URL
-- `GET    /api/stats/{code}` — Retrieve statistics for a shortened URL
 
 See [`src/infrastructure/server/routes.rs`](src/infrastructure/server/routes.rs) for details.
 
