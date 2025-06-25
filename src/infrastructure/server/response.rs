@@ -8,6 +8,7 @@ pub enum ApiResponse<T> {
     Success { data: T },
     Fail { data: Value },
     Error { message: String },
+    Redirect,
 }
 
 impl<T: Serialize> ApiResponse<T> {
@@ -27,5 +28,11 @@ impl<T: Serialize> ApiResponse<T> {
         HttpResponse::InternalServerError().json(Self::Error {
             message: message.into(),
         })
+    }
+
+    pub fn redirect(url: &str) -> HttpResponse {
+        HttpResponse::PermanentRedirect()
+            .append_header(("Location", url))
+            .finish()
     }
 }
