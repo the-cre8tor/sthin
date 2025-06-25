@@ -2,7 +2,7 @@ use std::sync::Arc;
 use uuid::Uuid;
 
 use crate::{
-    features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStats},
+    features::url_stats::{entity::UrlStatsEntity, error::UrlStatsError, model::UrlStatsModel},
     infrastructure::database::connection::DatabasePool,
 };
 
@@ -11,7 +11,7 @@ pub trait IUrlStatsRepository: Send + Sync {
         &self,
         url_id: Uuid,
         access_count: i32,
-    ) -> impl Future<Output = Result<UrlStats, UrlStatsError>> + Send;
+    ) -> impl Future<Output = Result<UrlStatsModel, UrlStatsError>> + Send;
 
     fn find_one(&self, url_id: Uuid) -> impl Future<Output = Result<i32, UrlStatsError>> + Send;
 }
@@ -27,7 +27,7 @@ impl UrlStatsRepository {
 }
 
 impl IUrlStatsRepository for UrlStatsRepository {
-    async fn save(&self, url_id: Uuid, access_count: i32) -> Result<UrlStats, UrlStatsError> {
+    async fn save(&self, url_id: Uuid, access_count: i32) -> Result<UrlStatsModel, UrlStatsError> {
         let response = sqlx::query_as!(
             UrlStatsEntity,
             r#"
@@ -49,7 +49,7 @@ impl IUrlStatsRepository for UrlStatsRepository {
         .fetch_one(&self.database.pool)
         .await?;
 
-        response.to_domain()
+        Ok(response.to_domain())
     }
 
     async fn find_one(&self, url_id: Uuid) -> Result<i32, UrlStatsError> {

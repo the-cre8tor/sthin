@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use crate::features::{
-    url_stats::{error::UrlStatsError, model::UrlStats, repository::IUrlStatsRepository},
+    url_stats::{error::UrlStatsError, model::UrlStatsModel, repository::IUrlStatsRepository},
     urls::models::Url,
 };
 
@@ -9,7 +9,7 @@ pub trait IUrlStatsService: Send + Sync {
     fn record_url_access(
         &self,
         url: Url,
-    ) -> impl Future<Output = Result<UrlStats, UrlStatsError>> + Send;
+    ) -> impl Future<Output = Result<UrlStatsModel, UrlStatsError>> + Send;
 }
 
 #[derive(Clone)]
@@ -24,7 +24,7 @@ impl<T: IUrlStatsRepository> UrlStatsService<T> {
 }
 
 impl<T: IUrlStatsRepository> IUrlStatsService for UrlStatsService<T> {
-    async fn record_url_access(&self, url: Url) -> Result<UrlStats, UrlStatsError> {
+    async fn record_url_access(&self, url: Url) -> Result<UrlStatsModel, UrlStatsError> {
         let url_id = url.id.unwrap();
         let mut access_count = self.repository.find_one(url_id).await?;
         access_count = access_count + 1;

@@ -2,7 +2,7 @@ use chrono::{DateTime, Utc};
 use sqlx::prelude::FromRow;
 use uuid::Uuid;
 
-use crate::features::url_stats::{error::UrlStatsError, model::UrlStats};
+use crate::features::url_stats::model::UrlStatsModel;
 
 #[derive(Debug, Clone, FromRow)]
 pub struct UrlStatsEntity {
@@ -15,7 +15,7 @@ pub struct UrlStatsEntity {
 }
 
 impl UrlStatsEntity {
-    pub fn from_domain(stats: UrlStats) -> Self {
+    pub fn from_domain(stats: UrlStatsModel) -> Self {
         Self {
             id: stats.id.unwrap_or_else(Uuid::new_v4),
             url_id: stats.url_id,
@@ -26,14 +26,14 @@ impl UrlStatsEntity {
         }
     }
 
-    pub fn to_domain(&self) -> Result<UrlStats, UrlStatsError> {
-        Ok(UrlStats {
+    pub fn to_domain(&self) -> UrlStatsModel {
+        UrlStatsModel {
             id: Some(self.id),
             url_id: self.url_id,
             access_count: self.access_count,
             created_at: Some(self.created_at),
             updated_at: Some(self.updated_at),
             deleted_at: self.deleted_at,
-        })
+        }
     }
 }

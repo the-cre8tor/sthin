@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
 #[derive(Debug, Serialize, Deserialize)]
-pub struct UrlStats {
+pub struct UrlStatsModel {
     pub id: Option<Uuid>,
     pub url_id: Uuid,
     pub access_count: i32,
@@ -12,7 +12,7 @@ pub struct UrlStats {
     pub deleted_at: Option<DateTime<Utc>>,
 }
 
-impl UrlStats {
+impl UrlStatsModel {
     pub fn new(url_id: Uuid, access_count: i32) -> Self {
         Self {
             id: None,
