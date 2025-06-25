@@ -4,12 +4,6 @@ A high-performance, async URL shortening service built with Rust, Actix-web, SQL
 
 ---
 
-## 🖼️ Architecture
-
-![Sthin Architecture](./docs/architecture.png)
-
----
-
 ## ✨ Features
 
 - 🔥 **Shorten URLs** — Generate short codes for long URLs.
