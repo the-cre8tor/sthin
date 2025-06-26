@@ -1,10 +1,13 @@
-use std::time::Instant;
+use std::{borrow::Cow, str::FromStr, time::Instant};
 
 use actix_web::{
-    HttpResponse,
+    HttpRequest, HttpResponse,
+    http::header::{HeaderValue, ToStrError, USER_AGENT},
     web::{Data, Json, Path},
 };
 use serde_json::Value;
+
+use actix_web::http::header;
 
 use crate::{
     error::AppError,
@@ -57,7 +60,12 @@ impl UrlHandler {
         param: Path<String>,
         service: Data<AppServices>,
         queue: Data<QueueProcessor>,
+        req: HttpRequest,
     ) -> Result<HttpResponse, AppError> {
+        let connection_info = req.connection_info();
+        let ip = connection_info.realip_remote_addr().unwrap_or("unknown");
+        let user_agent = UrlHandler::user_agent(&req);
+
         let short_code = ShortCode::new(Some(param.into_inner()))?;
 
         let result = service
@@ -75,6 +83,18 @@ impl UrlHandler {
         }
 
         Ok(ApiResponse::<&str>::redirect(result.original_url.as_str()))
+    }
+
+    fn user_agent(req: &HttpRequest) -> String {
+        req.headers()
+            .get(header::USER_AGENT)
+            .map(|agent| {
+                agent.to_str().map(Cow::Borrowed).unwrap_or_else(|_| {
+                    Cow::Owned(String::from_utf8_lossy(agent.as_bytes()).into_owned())
+                })
+            })
+            .unwrap_or_else(|| Cow::Borrowed("unknown"))
+            .to_string()
     }
 
     pub async fn fetch_short_code_stats(
