@@ -1,5 +1,5 @@
 use actix_web::dev::Server;
-use actix_web::middleware::NormalizePath;
+use actix_web::middleware::{NormalizePath, TrailingSlash};
 use actix_web::web::{Data, get};
 use actix_web::{App, HttpServer};
 use std::net::TcpListener;
@@ -78,7 +78,7 @@ impl WebServer {
         let server = HttpServer::new(move || {
             App::new()
                 .wrap(TracingLogger::default())
-                .wrap(NormalizePath::default())
+                .wrap(NormalizePath::new(TrailingSlash::Trim))
                 .route("healthz", get().to(health_check))
                 .configure(Routes::configure_routes)
                 .app_data(Data::new(services.clone()))
