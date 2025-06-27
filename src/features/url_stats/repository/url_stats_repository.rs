@@ -7,6 +7,7 @@ use crate::{
             entity::{UrlStatsEntity, UrlStatsReportEntity},
             error::UrlStatsError,
             model::{Log, LogList, UrlStatsModel},
+            queue::StatsEvent,
         },
         urls::value_objects::ShortCode,
     },
@@ -16,7 +17,7 @@ use crate::{
 pub trait IUrlStatsRepository: Send + Sync {
     fn save(
         &self,
-        url_id: Uuid,
+        event: &StatsEvent,
         access_count: i32,
     ) -> impl Future<Output = Result<UrlStatsModel, UrlStatsError>> + Send;
 
@@ -53,29 +54,62 @@ impl IUrlStatsRepository for UrlStatsRepository {
         Ok(0)
     }
 
-    async fn save(&self, url_id: Uuid, access_count: i32) -> Result<UrlStatsModel, UrlStatsError> {
-        let response = sqlx::query_as!(
-            UrlStatsEntity,
-            r#"
-            INSERT INTO url_stats (url_id, access_count)
-            VALUES ($1, $2)
-            ON CONFLICT (url_id) DO UPDATE
-            SET access_count = EXCLUDED.access_count,
-                updated_at = EXCLUDED.updated_at
-            RETURNING id as "id!",
-                      url_id as "url_id!",
-                      access_count as "access_count!",
-                      created_at as "created_at!",
-                      updated_at as "updated_at!",
-                      deleted_at
-            "#,
-            url_id,
-            access_count
-        )
-        .fetch_one(&self.database.pool)
-        .await?;
+    async fn save(
+        &self,
+        event: &StatsEvent,
+        access_count: i32,
+    ) -> Result<UrlStatsModel, UrlStatsError> {
+        let url_id = event.url.id.ok_or(UrlStatsError::MissingUrlId)?;
+        let mut tx = self.database.pool.begin().await?;
 
-        Ok(response.to_domain())
+        let result = async {
+            let response = sqlx::query_as!(
+                UrlStatsEntity,
+                r#"
+                INSERT INTO url_stats (url_id, access_count)
+                VALUES ($1, $2)
+                ON CONFLICT (url_id) DO UPDATE
+                SET access_count = EXCLUDED.access_count,
+                    updated_at = NOW()
+                RETURNING id as "id!",
+                          url_id as "url_id!",
+                          access_count as "access_count!",
+                          created_at as "created_at!",
+                          updated_at as "updated_at!",
+                          deleted_at
+                "#,
+                url_id,
+                access_count
+            )
+            .fetch_one(&mut *tx)
+            .await?;
+
+            sqlx::query!(
+                r#"
+                INSERT INTO url_stats_logs (url_stats_id, ip_address, user_agent)
+                VALUES ($1, $2, $3)
+                "#,
+                response.id,
+                event.ip_address,
+                event.user_agent
+            )
+            .execute(&mut *tx)
+            .await?;
+
+            Ok::<UrlStatsEntity, UrlStatsError>(response)
+        }
+        .await;
+
+        match result {
+            Ok(response) => {
+                tx.commit().await?;
+                Ok(response.to_domain())
+            }
+            Err(e) => {
+                tx.rollback().await?;
+                Err(e)
+            }
+        }
     }
 
     async fn fetch_stats(&self, short_code: ShortCode) -> Result<Option<LogList>, UrlStatsError> {
