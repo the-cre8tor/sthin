@@ -1,14 +1,13 @@
 use std::sync::Arc;
 
-use crate::features::{
-    url_stats::{error::UrlStatsError, model::UrlStatsModel, repository::IUrlStatsRepository},
-    urls::models::Url,
+use crate::features::url_stats::{
+    error::UrlStatsError, model::UrlStatsModel, queue::StatsEvent, repository::IUrlStatsRepository,
 };
 
 pub trait IUrlStatsService: Send + Sync {
-    fn record_url_access(
+    fn record_url_access_and_log(
         &self,
-        url: Url,
+        event: StatsEvent,
     ) -> impl Future<Output = Result<UrlStatsModel, UrlStatsError>> + Send;
 }
 
@@ -24,11 +23,14 @@ impl<T: IUrlStatsRepository> UrlStatsService<T> {
 }
 
 impl<T: IUrlStatsRepository> IUrlStatsService for UrlStatsService<T> {
-    async fn record_url_access(&self, url: Url) -> Result<UrlStatsModel, UrlStatsError> {
-        let url_id = url.id.unwrap();
+    async fn record_url_access_and_log(
+        &self,
+        event: StatsEvent,
+    ) -> Result<UrlStatsModel, UrlStatsError> {
+        let url_id = event.url.id.unwrap();
         let mut access_count = self.repository.find_one(url_id).await?;
         access_count = access_count + 1;
 
-        self.repository.save(url_id, access_count).await
+        self.repository.save(&event, access_count).await
     }
 }
