@@ -9,7 +9,9 @@ use std::{sync::Arc, time::Instant};
 use tokio::sync::mpsc;
 
 pub struct StatsEvent {
-    pub data: Url,
+    pub url: Url,
+    pub ip_address: String,
+    pub user_agent: String,
     pub timestamp: Instant,
 }
 
@@ -24,7 +26,7 @@ impl StatsProcessor {
 
         tokio::spawn(async move {
             while let Some(event) = receiver.recv().await {
-                if let Err(error) = service.record_url_access(event.data).await {
+                if let Err(error) = service.record_url_access_and_log(event).await {
                     println!("Failed to record stats: {}", error)
                 }
             }
