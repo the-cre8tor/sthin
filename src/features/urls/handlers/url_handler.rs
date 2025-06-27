@@ -12,7 +12,7 @@ use actix_web::http::header;
 use crate::{
     error::AppError,
     features::{
-        url_stats::queue::StatsEvent,
+        url_stats::{model::UrlStatsLogsModel, queue::StatsEvent},
         urls::{
             dtos::{CreateUrlDto, UpdateUrlDto},
             service::IUrlService,
@@ -74,7 +74,9 @@ impl UrlHandler {
             .await?;
 
         let event = StatsEvent {
-            data: result.clone(),
+            url: result.clone(),
+            ip_address: ip.to_string(),
+            user_agent: user_agent,
             timestamp: Instant::now(),
         };
 
