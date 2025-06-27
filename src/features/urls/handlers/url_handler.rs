@@ -1,8 +1,7 @@
-use std::{borrow::Cow, str::FromStr, time::Instant};
+use std::{borrow::Cow, time::Instant};
 
 use actix_web::{
     HttpRequest, HttpResponse,
-    http::header::{HeaderValue, ToStrError, USER_AGENT},
     web::{Data, Json, Path},
 };
 use serde_json::Value;
@@ -12,7 +11,7 @@ use actix_web::http::header;
 use crate::{
     error::AppError,
     features::{
-        url_stats::{model::UrlStatsLogsModel, queue::StatsEvent},
+        url_stats::queue::StatsEvent,
         urls::{
             dtos::{CreateUrlDto, UpdateUrlDto},
             service::IUrlService,
