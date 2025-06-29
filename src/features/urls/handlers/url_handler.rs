@@ -11,7 +11,7 @@ use actix_web::http::header;
 use crate::{
     error::AppError,
     features::{
-        url_stats::queue::StatsEvent,
+        url_stats::{queue::StatsEvent, service::IUrlStatsService},
         urls::{
             dtos::{CreateUrlDto, UpdateUrlDto},
             service::IUrlService,
@@ -102,7 +102,20 @@ impl UrlHandler {
         param: Path<String>,
         service: Data<AppServices>,
     ) -> Result<HttpResponse, AppError> {
-        Ok(ApiResponse::success({}))
+        let short_code = ShortCode::new(Some(param.into_inner()))?;
+
+        let response = service
+            .url_stats_service
+            .fetch_stats(short_code)
+            .await
+            .map_err(|error| AppError::NotFound(error.to_string()));
+
+        let response = match response {
+            Ok(value) => Ok(ApiResponse::success(value)),
+            Err(error) => Err(error),
+        };
+
+        response
     }
 
     pub async fn update_url_by_short_code(
