@@ -1,7 +1,13 @@
 use std::sync::Arc;
 
-use crate::features::url_stats::{
-    error::UrlStatsError, model::UrlStatsModel, queue::StatsEvent, repository::IUrlStatsRepository,
+use crate::features::{
+    url_stats::{
+        error::UrlStatsError,
+        model::{LogList, UrlStatsModel},
+        queue::StatsEvent,
+        repository::IUrlStatsRepository,
+    },
+    urls::value_objects::ShortCode,
 };
 
 pub trait IUrlStatsService: Send + Sync {
@@ -9,6 +15,10 @@ pub trait IUrlStatsService: Send + Sync {
         &self,
         event: StatsEvent,
     ) -> impl Future<Output = Result<UrlStatsModel, UrlStatsError>> + Send;
+    fn fetch_stats(
+        &self,
+        short_code: ShortCode,
+    ) -> impl Future<Output = Result<Option<LogList>, UrlStatsError>> + Send;
 }
 
 #[derive(Clone)]
@@ -32,5 +42,11 @@ impl<T: IUrlStatsRepository> IUrlStatsService for UrlStatsService<T> {
         access_count = access_count + 1;
 
         self.repository.save(&event, access_count).await
+    }
+
+    async fn fetch_stats(&self, short_code: ShortCode) -> Result<Option<LogList>, UrlStatsError> {
+        let response = self.repository.fetch_stats(short_code).await;
+
+        response
     }
 }
